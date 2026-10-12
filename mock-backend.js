@@ -278,7 +278,16 @@
       });
     }
 
-    // Catch-all for any other SolPrime or external calls to avoid CORS
+    // Always pass through external APIs (Plisio, Binance price feed)
+    if (url.includes('plisio.net') || url.includes('binance.com')) {
+      try {
+        return await originalFetch.apply(this, arguments);
+      } catch(err) {
+        return jsonResp({ ok: false, error: 'network_error' });
+      }
+    }
+
+    // Catch-all for any other SolPrime or internal API calls to avoid CORS
     if (url.includes('solprime') || url.includes('/api/') || url.includes('/games/')) {
       return jsonResp({ ok: true, data: {} });
     }

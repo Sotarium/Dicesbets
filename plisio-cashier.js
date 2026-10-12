@@ -280,13 +280,11 @@
   // HEADER BALANCE PILL & DIRECT CASHIER OPENER
   function renderHeaderBalance() {
     const balance = localStorage.getItem('flipsol_balance') || "0.001";
-    const headerBtns = document.querySelectorAll('button[data-auth-plate="connect"], button[data-node-id="671:9397"]');
 
+    // --- 1. Replace the connect/sign-in button with the balance pill ---
+    const headerBtns = document.querySelectorAll('button[data-auth-plate="connect"], button[data-node-id="671:9397"]');
     headerBtns.forEach((btn, idx) => {
-      if (idx > 0) {
-        btn.style.display = 'none';
-        return;
-      }
+      if (idx > 0) { btn.style.display = 'none'; return; }
       btn.style.display = 'flex';
       btn.innerHTML = `
         <div style="display:flex; align-items:center; gap:8px;">
@@ -306,13 +304,57 @@
       btn.style.borderRadius = '12px';
       btn.style.width = 'auto';
       btn.style.cursor = 'pointer';
-
-      btn.onclick = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        window.openCashierModal();
-      };
+      btn.onclick = (e) => { e.preventDefault(); e.stopPropagation(); window.openCashierModal(); };
     });
+
+    // --- 2. Inject balance pill next to Affiliates nav link ---
+    // Find the Affiliates link by text content
+    if (document.getElementById('flipsol-nav-balance')) {
+      // Already injected — just update the balance text
+      const el = document.getElementById('flipsol-nav-balance-text');
+      if (el) el.textContent = balance;
+      return;
+    }
+
+    let affiliatesLink = null;
+    document.querySelectorAll('a, button, span').forEach(el => {
+      if (el.children.length === 0 && el.textContent.trim() === 'Affiliates') {
+        affiliatesLink = el;
+      }
+    });
+
+    if (affiliatesLink) {
+      // Walk up to find a flex container parent we can append to
+      let container = affiliatesLink.parentElement;
+      // Go up a couple levels to find the nav row
+      for (let i = 0; i < 3; i++) {
+        if (container && container.parentElement) container = container.parentElement;
+      }
+
+      const pill = document.createElement('button');
+      pill.id = 'flipsol-nav-balance';
+      pill.style.cssText = `
+        display: inline-flex; align-items: center; gap: 7px;
+        background: linear-gradient(180deg, rgba(34,35,52,0.95) 0%, rgba(20,21,32,0.95) 100%);
+        border: 1px solid rgba(255,255,255,0.1);
+        box-shadow: rgba(255,255,255,0.05) 0px 1px 0px inset, rgba(0,0,0,0.5) 0px 4px 12px;
+        border-radius: 10px; padding: 0 14px; height: 38px;
+        cursor: pointer; margin-left: 10px; flex-shrink: 0;
+      `;
+      pill.innerHTML = `
+        <div style="width:18px;height:18px;border-radius:50%;background:#10111a;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <img src="/sol-3d.png" width="14" height="14" style="object-fit:contain;" alt="" />
+        </div>
+        <span id="flipsol-nav-balance-text" style="color:#fff;font-weight:800;font-size:13.5px;letter-spacing:0.3px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">${balance}</span>
+      `;
+      pill.onclick = (e) => { e.preventDefault(); e.stopPropagation(); window.openCashierModal(); };
+
+      // Insert after the Affiliates link's closest li/div ancestor inside the nav row
+      const insertAfter = affiliatesLink.closest('li') || affiliatesLink.closest('div') || affiliatesLink;
+      if (insertAfter && insertAfter.parentElement) {
+        insertAfter.parentElement.insertBefore(pill, insertAfter.nextSibling);
+      }
+    }
   }
 
 
