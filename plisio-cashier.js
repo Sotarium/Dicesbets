@@ -292,5 +292,72 @@
     };
   };
 
-  console.log('[FlipSol] Refined Cashier with Live Plisio Deposit Address & Hover States Active.');
+  // HEADER BALANCE PILL & DIRECT CASHIER OPENER
+  function renderHeaderBalance() {
+    const balance = localStorage.getItem('flipsol_balance') || "0.001";
+    const headerBtns = document.querySelectorAll('button[data-auth-plate="connect"], button[data-node-id="671:9397"]');
+
+    headerBtns.forEach((btn, idx) => {
+      if (idx > 0) {
+        btn.style.display = 'none';
+        return;
+      }
+      btn.style.display = 'flex';
+      btn.innerHTML = `
+        <div style="display:flex; align-items:center; gap:8px;">
+          <div style="width:20px; height:20px; border-radius:50%; background:#10111a; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+            <img src="/sol-3d.png" width="16" height="16" style="object-fit:contain;" alt="" />
+          </div>
+          <span style="color:#ffffff; font-weight:800; font-size:14.5px; letter-spacing:0.3px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+            ${balance}
+          </span>
+        </div>
+      `;
+      btn.style.background = 'linear-gradient(180deg, rgba(34, 35, 52, 0.95) 0%, rgba(20, 21, 32, 0.95) 100%)';
+      btn.style.border = '1px solid rgba(255, 255, 255, 0.1)';
+      btn.style.boxShadow = 'rgba(255, 255, 255, 0.05) 0px 1px 0px inset, rgba(0, 0, 0, 0.6) 0px 4px 16px';
+      btn.style.padding = '0 18px';
+      btn.style.height = '42px';
+      btn.style.borderRadius = '12px';
+      btn.style.width = 'auto';
+      btn.style.cursor = 'pointer';
+
+      btn.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        window.openCashierModal();
+      };
+    });
+  }
+
+  // Intercept any wallet connect / modal click on the page and open Cashier directly
+  document.addEventListener('click', (e) => {
+    const target = e.target.closest('button, a, [role="button"]');
+    if (!target) return;
+    const txt = (target.innerText || '').toLowerCase();
+    if (txt.includes('connect wallet') || txt.includes('select wallet') || txt.includes('phantom') || txt.includes('solflare')) {
+      e.preventDefault();
+      e.stopPropagation();
+      window.openCashierModal();
+    }
+  }, true);
+
+  // Permanently suppress any third-party wallet modal styles
+  const walletKillStyle = document.createElement('style');
+  walletKillStyle.innerHTML = `
+    .wallet-adapter-modal,
+    .wallet-adapter-modal-container,
+    .mobile-wallet-adapter-embedded-modal,
+    .mobile-wallet-adapter-modal {
+      display: none !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
+    }
+  `;
+  document.head.appendChild(walletKillStyle);
+
+  window.addEventListener('DOMContentLoaded', renderHeaderBalance);
+  setInterval(renderHeaderBalance, 1200);
+
+  console.log('[FlipSol] Pure Deposit Cashier active. All wallet connect files deleted.');
 })();
