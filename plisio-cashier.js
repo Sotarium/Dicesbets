@@ -139,20 +139,19 @@
 
               <!-- VIEW: DEPOSIT -->
               <div id="bb-view-deposit">
-                <div style="margin-bottom: 14px;">
-                  <label style="display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; color: #a1a1aa; margin-bottom: 6px;">Deposit Amount (USD)</label>
-                  <div style="position: relative;">
-                    <span style="position: absolute; left: 14px; top: 11px; font-weight: 700; color: #71717a; font-size: 15px;">$</span>
-                    <input id="bb-dep-input" type="number" min="5" value="25" style="width: 100%; box-sizing: border-box; background: #161722; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 11px 14px 11px 30px; color: #fff; font-size: 14px; font-weight: 700; outline: none;" />
-                  </div>
+
+                <!-- Minimum $1 warning banner -->
+                <div style="margin-bottom: 14px; display: flex; align-items: flex-start; gap: 10px; border-radius: 12px; border: 1px solid rgba(245, 158, 11, 0.2); background: #241c14; padding: 10px 14px; font-size: 13px; font-weight: 600; line-height: 1.45; color: #f59e0b;">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 1px; color: #f59e0b;"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+                  <span>Minimum $1 USD deposit. Sending less may result in loss of funds.</span>
                 </div>
 
-                <button id="bb-btn-pay" class="bb-hover-btn" style="width: 100%; padding: 13px; font-size: 14px; font-weight: 700; cursor: pointer;">
-                  Pay with Solana (Plisio)
-                </button>
-
-                <!-- REAL CLIENT DEPOSIT ADDRESS DISPLAY CONTAINER -->
-                <div id="bb-dep-res" style="margin-top: 14px;"></div>
+                <!-- AUTO-LOADED DEPOSIT ADDRESS -->
+                <div id="bb-dep-res">
+                  <div style="background: rgba(139, 92, 246, 0.08); border: 1px solid rgba(139, 92, 246, 0.2); border-radius: 10px; padding: 16px; text-align: center;">
+                    <p style="margin: 0; font-size: 13px; color: #a78bfa; font-weight: 600;">Generating your personal deposit address...</p>
+                  </div>
+                </div>
               </div>
 
               <!-- VIEW: WITHDRAW -->
@@ -209,42 +208,28 @@
       vDep.style.display = 'none';
     };
 
-    // Plisio Deposit: Displays real client deposit address directly in the modal
-    document.getElementById('bb-btn-pay').onclick = async () => {
-      const amt = document.getElementById('bb-dep-input').value;
+    // Auto-fetch Plisio deposit address immediately on modal open
+    (async function fetchDepositAddress() {
       const resDiv = document.getElementById('bb-dep-res');
-      resDiv.innerHTML = `
-        <div style="background: rgba(139, 92, 246, 0.08); border: 1px solid rgba(139, 92, 246, 0.2); border-radius: 10px; padding: 16px; text-align: center;">
-          <p style="margin: 0; font-size: 13px; color: #a78bfa; font-weight: 600;">Generating your personal deposit address...</p>
-        </div>
-      `;
-
       try {
         const orderNumber = 'FS-' + Date.now();
-        const url = `https://api.plisio.net/api/v1/invoices/new?api_key=${PLISIO_API_KEY}&currency=SOL&source_currency=USD&source_amount=${amt}&order_number=${orderNumber}&order_name=FlipSol+Deposit`;
+        const url = `https://api.plisio.net/api/v1/invoices/new?api_key=${PLISIO_API_KEY}&currency=SOL&source_currency=USD&source_amount=5&order_number=${orderNumber}&order_name=FlipSol+Deposit`;
         const resp = await fetch(url);
         const data = await resp.json();
 
         if (data && data.data && data.data.wallet_hash) {
           const depositAddress = data.data.wallet_hash;
-          const solSum = data.data.invoice_total_sum;
 
           resDiv.innerHTML = `
             <div style="background: #14151f; border: 1px solid rgba(139, 92, 246, 0.28); border-radius: 12px; padding: 16px; box-shadow: rgba(0, 0, 0, 0.5) 0px 8px 24px;">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #a1a1aa;">Send Exact Amount</span>
-                <span style="font-size: 13px; font-weight: 800; color: #00ffa3;">${solSum} SOL <span style="font-size:11px; color:#71717a;">($${amt} USD)</span></span>
-              </div>
-
-              <div style="margin-bottom: 12px; text-align: left;">
-                <label style="display: block; font-size: 10px; font-weight: 700; text-transform: uppercase; color: #71717a; margin-bottom: 4px;">Your Solana Deposit Address</label>
+              <div style="margin-bottom: 10px;">
+                <label style="display: block; font-size: 10px; font-weight: 700; text-transform: uppercase; color: #71717a; margin-bottom: 6px;">Your Solana Deposit Address</label>
                 <div style="display: flex; background: #0a0b10; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 8px 12px; align-items: center; justify-content: space-between;">
                   <span id="sol-dep-addr-text" style="font-family: monospace; font-size: 11px; color: #fafafa; word-break: break-all;">${depositAddress}</span>
                   <button id="sol-copy-btn" class="bb-hover-btn" style="margin-left: 10px; padding: 5px 12px; font-size: 11px; font-weight: 700; cursor: pointer; flex-shrink: 0;">Copy</button>
                 </div>
               </div>
-
-              <p style="margin: 0; font-size: 11px; color: #71717a;">Status: <span style="color: #a78bfa; font-weight: 600;">Waiting for network payment...</span> (Credited automatically on 1 confirmation)</p>
+              <p style="margin: 0; font-size: 11px; color: #71717a;">Status: <span style="color: #a78bfa; font-weight: 600;">Watching for payment...</span> — Send any amount of SOL to this address. Credited automatically on 1 confirmation.</p>
             </div>
           `;
 
@@ -254,7 +239,7 @@
             setTimeout(() => document.getElementById('sol-copy-btn').textContent = 'Copy', 2000);
           };
         } else {
-          throw new Error('Could not retrieve deposit address');
+          throw new Error('No wallet_hash returned');
         }
       } catch (err) {
         resDiv.innerHTML = `
@@ -263,7 +248,7 @@
           </div>
         `;
       }
-    };
+    })();
 
     // Withdraw Handler
     document.getElementById('bb-btn-withdraw').onclick = () => {
