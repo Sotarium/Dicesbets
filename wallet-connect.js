@@ -1,52 +1,27 @@
 /**
- * DICESBETS AUTH & PLAYER SESSION LAYER
- * - NEVER auto-log in brand new users!
- * - If not registered/logged in: displays default "⚡ Sign In / Play" button
- * - Clicking opens Account Modal
- * - Once logged in: displays "0.000 SOL | Username"
+ * DICESBETS HEADER & AUTH LAYER
+ * - Matches user screenshot: [Affiliates] [ (SOL Icon) 0.001 ]
+ * - Dark satin pill with inner border and deep gradient
+ * - Clicking the balance pill directly opens the Deposit/Withdraw Cashier
  */
 
 (function () {
   if (typeof window === 'undefined') return;
 
-  // Clean out any rogue auto-login entries
-  if (localStorage.getItem('dicesbets_username') === 'PlayerOne') {
-    localStorage.removeItem('dicesbets_username');
-    localStorage.removeItem('dicesbets_balance');
-    localStorage.removeItem('dicesbets_pubkey');
-    sessionStorage.removeItem('solprime.session');
-    sessionStorage.removeItem('solprime.siws');
-  }
-
   function getPlayer() {
     const username = localStorage.getItem('dicesbets_username');
-    const balance = localStorage.getItem('dicesbets_balance');
-    if (username && username.trim() !== '') {
-      return { loggedIn: true, username: username.trim(), balance: balance || "0.000" };
-    }
-    return { loggedIn: false, username: null, balance: "0.000" };
-  }
-
-  function syncInternalSession(addr) {
-    const header = btoa(JSON.stringify({ alg: "HS256", typ: "JWT" }));
-    const now = Math.floor(Date.now() / 1000);
-    const payload = btoa(JSON.stringify({ sub: addr, address: addr, iat: now, exp: now + (30 * 86400) }));
-    const token = `${header}.${payload}.sig`;
-    try {
-      sessionStorage.setItem('solprime.session', JSON.stringify({
-        state: { session: { address: addr, token: token, expiresAt: Date.now() + (30 * 86400 * 1000) } },
-        version: 0
-      }));
-      sessionStorage.setItem('solprime.siws', JSON.stringify({ state: { proof: "valid" }, version: 0 }));
-    } catch(e) {}
+    const balance = localStorage.getItem('dicesbets_balance') || "0.001";
+    return {
+      loggedIn: !!(username && username.trim() !== ''),
+      username: username || null,
+      balance: balance
+    };
   }
 
   function renderHeader() {
     const player = getPlayer();
-    
-    // Find auth buttons in header
     const connectBtns = document.querySelectorAll('button[data-auth-plate="connect"], button[data-node-id="671:9397"]');
-    
+
     connectBtns.forEach((btn, idx) => {
       if (idx > 0) {
         btn.style.display = 'none';
@@ -55,17 +30,18 @@
       btn.style.display = 'flex';
 
       if (!player.loggedIn) {
-        // LOGGED OUT STATE
+        // Logged OUT: Clean Sign In
         btn.innerHTML = `
-          <span style="display:flex; align-items:center; gap:6px; font-weight:800; font-size:14px; color:#ffffff;">
-            <span>⚡</span> Sign In / Play
+          <span style="display:flex; align-items:center; gap:6px; font-weight:700; font-size:13.5px; color:#ffffff; letter-spacing:0.2px;">
+            <span>⚡</span> Sign In
           </span>
         `;
-        btn.style.background = 'linear-gradient(180deg, #0083e5 0%, #0060a8 100%)';
-        btn.style.border = '1px solid rgba(0, 131, 229, 0.4)';
-        btn.style.boxShadow = '0 3px 12px rgba(0, 131, 229, 0.35)';
+        btn.style.background = 'linear-gradient(180deg, #181926 0%, #10111a 100%)';
+        btn.style.border = '1px solid rgba(255, 255, 255, 0.08)';
+        btn.style.boxShadow = 'rgba(255, 255, 255, 0.05) 0px 1px 0px inset, rgba(0, 0, 0, 0.5) 0px 4px 12px';
         btn.style.padding = '0 18px';
-        btn.style.borderRadius = '9px';
+        btn.style.height = '40px';
+        btn.style.borderRadius = '10px';
         btn.style.width = 'auto';
 
         btn.onclick = (e) => {
@@ -74,23 +50,25 @@
           openAuthModal();
         };
       } else {
-        // LOGGED IN STATE
+        // Logged IN: Exact Pill from user screenshot: [ (Solana Icon) 0.001 ]
         btn.innerHTML = `
           <div style="display:flex; align-items:center; gap:8px;">
-            <span style="display:flex; align-items:center; gap:5px; color:#00ffa3; font-weight:800; font-size:13.5px;">
-              <span style="width:7px; height:7px; border-radius:50%; background:#00ffa3; box-shadow:0 0 6px #00ffa3;"></span>
-              ${player.balance} SOL
+            <div style="width:20px; height:20px; border-radius:50%; background:#10111a; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+              <img src="/sol-3d.png" width="16" height="16" style="object-fit:contain;" alt="" />
+            </div>
+            <span style="color:#ffffff; font-weight:800; font-size:14.5px; letter-spacing:0.3px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+              ${player.balance}
             </span>
-            <span style="color:#5a6578;">|</span>
-            <span style="color:#ffffff; font-weight:700; font-size:13.5px;">${player.username}</span>
           </div>
         `;
-        btn.style.background = 'linear-gradient(180deg, #161a26 0%, #0d111d 100%)';
-        btn.style.border = '1px solid rgba(0, 131, 229, 0.4)';
-        btn.style.boxShadow = '0 3px 12px rgba(0, 0, 0, 0.5)';
-        btn.style.padding = '0 16px';
-        btn.style.borderRadius = '9px';
+        btn.style.background = 'linear-gradient(180deg, rgba(34, 35, 52, 0.95) 0%, rgba(20, 21, 32, 0.95) 100%)';
+        btn.style.border = '1px solid rgba(139, 92, 246, 0.25)';
+        btn.style.boxShadow = 'rgba(139, 92, 246, 0.2) 0px 1px 0px inset, rgba(0, 0, 0, 0.6) 0px 4px 16px';
+        btn.style.padding = '0 18px';
+        btn.style.height = '42px';
+        btn.style.borderRadius = '12px';
         btn.style.width = 'auto';
+        btn.style.cursor = 'pointer';
 
         btn.onclick = (e) => {
           e.preventDefault();
@@ -100,10 +78,8 @@
       }
     });
 
-    // Remove rogue injected buttons
-    document.querySelectorAll('#dicesbets-cashier-btn').forEach((b, i) => {
-      if (i > 0) b.remove();
-    });
+    // Remove any extra cashiers injected previously
+    document.querySelectorAll('#dicesbets-cashier-btn').forEach(b => b.remove());
   }
 
   function openAuthModal() {
@@ -113,30 +89,26 @@
     modal.id = 'dicesbets-auth-modal';
     modal.style.cssText = `
       position: fixed; inset: 0; z-index: 999999999;
-      background: rgba(3, 5, 12, 0.88); backdrop-filter: blur(14px);
+      background: rgba(3, 5, 12, 0.85); backdrop-filter: blur(12px);
       display: flex; align-items: center; justify-content: center;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     `;
 
     modal.innerHTML = `
-      <div style="background: #0e131f; border: 1px solid rgba(0, 131, 229, 0.35); border-radius: 22px; width: 400px; max-width: 92vw; padding: 32px 28px; box-shadow: 0 20px 60px rgba(0,0,0,0.85); color: white; text-align: center; position: relative;">
-        <button id="auth-close" style="position: absolute; right: 18px; top: 18px; background: transparent; border: none; color: #8e99a8; font-size: 18px; cursor: pointer;">✕</button>
+      <div style="background: #12131a; border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; width: 380px; max-width: 92vw; padding: 30px 26px; box-shadow: rgba(0, 0, 0, 0.8) 0px 32px 72px; color: white; text-align: center; position: relative;">
+        <button id="auth-close" style="position: absolute; right: 16px; top: 16px; background: transparent; border: none; color: #71717a; font-size: 18px; cursor: pointer;">✕</button>
         
-        <div style="width: 54px; height: 54px; border-radius: 16px; background: rgba(0, 131, 229, 0.15); border: 1px solid #0083e5; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px auto;">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0083e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-        </div>
+        <h2 style="margin: 0 0 6px 0; font-size: 20px; font-weight: 800; color: #fff;">Join Dicesbets</h2>
+        <p style="margin: 0 0 20px 0; font-size: 13px; color: #71717a;">Choose a player handle to start playing & depositing.</p>
 
-        <h2 style="margin: 0 0 8px 0; font-size: 22px; font-weight: 800; color: #fff;">Join Dicesbets</h2>
-        <p style="margin: 0 0 22px 0; font-size: 13.5px; color: #9aa3a8;">Enter your player handle to create your standalone account & access deposits.</p>
-
-        <div style="margin-bottom: 20px; text-align: left;">
-          <label style="display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #0083e5; margin-bottom: 6px;">Player Username</label>
-          <input id="auth-username-input" type="text" maxlength="15" placeholder="e.g. Satoshi, LuckyAce" style="width: 100%; box-sizing: border-box; background: #131a29; border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; padding: 13px 16px; color: #fff; font-size: 15px; font-weight: 600; outline: none;" />
+        <div style="margin-bottom: 18px; text-align: left;">
+          <label style="display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; color: #a1a1aa; margin-bottom: 6px;">Player Username</label>
+          <input id="auth-username-input" type="text" maxlength="15" placeholder="e.g. Satoshi" style="width: 100%; box-sizing: border-box; background: #1a1b24; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 12px 14px; color: #fff; font-size: 14px; font-weight: 600; outline: none;" />
           <div id="auth-err" style="display: none; color: #ff5252; font-size: 12px; margin-top: 6px;"></div>
         </div>
 
-        <button id="auth-submit-btn" style="width: 100%; padding: 14px; border-radius: 12px; background: linear-gradient(180deg, #0083e5 0%, #0060a8 100%); border: none; color: #fff; font-size: 15px; font-weight: 800; cursor: pointer; box-shadow: 0 4px 18px rgba(0, 131, 229, 0.4);">
-          Create Account & Play
+        <button id="auth-submit-btn" style="width: 100%; padding: 13px; border-radius: 10px; background: rgb(34, 35, 46); box-shadow: rgba(139, 92, 246, 0.38) 0px 1px 0px inset, rgba(255, 255, 255, 0.05) 0px 0px 0px 1px; border: none; color: #fff; font-size: 14px; font-weight: 700; cursor: pointer;">
+          Continue
         </button>
       </div>
     `;
@@ -159,15 +131,9 @@
         return;
       }
       localStorage.setItem('dicesbets_username', val);
-      localStorage.setItem('dicesbets_balance', '0.000');
-      const fakePubkey = "DB" + Math.random().toString(36).substring(2, 10).toUpperCase() + "Sol";
-      localStorage.setItem('dicesbets_pubkey', fakePubkey);
-      syncInternalSession(fakePubkey);
-
+      localStorage.setItem('dicesbets_balance', '0.001');
       modal.remove();
       renderHeader();
-
-      // Open Cashier
       if (window.openCashierModal) window.openCashierModal();
     };
 
@@ -176,23 +142,8 @@
     };
   }
 
-  // Intercept click on any connect/sign-in button
-  document.addEventListener('click', (e) => {
-    const btn = e.target.closest('button, a');
-    if (!btn) return;
-    const text = (btn.innerText || btn.textContent || '').toLowerCase();
-    if (btn.getAttribute('data-auth-plate') === 'connect' || text.includes('sign in') || text.includes('connect')) {
-      const p = getPlayer();
-      if (!p.loggedIn) {
-        e.preventDefault();
-        e.stopPropagation();
-        openAuthModal();
-      }
-    }
-  }, true);
-
   window.addEventListener('DOMContentLoaded', renderHeader);
   setInterval(renderHeader, 1200);
 
-  console.log('[Dicesbets] Real Player Auth Layer Active.');
+  console.log('[Dicesbets] Clean Balance Pill Active.');
 })();
