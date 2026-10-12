@@ -1,24 +1,32 @@
 /**
  * DICESBETS AUTH & PLAYER SESSION LAYER
- * - New users start UNLOGGED (show clean "Sign In / Register" or "Connect")
- * - Clicking opens Account Modal to pick username
- * - Once logged in, displays single player button with balance & opens Cashier
+ * - NEVER auto-log in brand new users!
+ * - If not registered/logged in: displays default "⚡ Sign In / Play" button
+ * - Clicking opens Account Modal
+ * - Once logged in: displays "0.000 SOL | Username"
  */
 
 (function () {
   if (typeof window === 'undefined') return;
 
-  // Check existing session
+  // Clean out any rogue auto-login entries
+  if (localStorage.getItem('dicesbets_username') === 'PlayerOne') {
+    localStorage.removeItem('dicesbets_username');
+    localStorage.removeItem('dicesbets_balance');
+    localStorage.removeItem('dicesbets_pubkey');
+    sessionStorage.removeItem('solprime.session');
+    sessionStorage.removeItem('solprime.siws');
+  }
+
   function getPlayer() {
     const username = localStorage.getItem('dicesbets_username');
-    const balance = localStorage.getItem('dicesbets_balance') || "0.000";
+    const balance = localStorage.getItem('dicesbets_balance');
     if (username && username.trim() !== '') {
-      return { loggedIn: true, username: username.trim(), balance: balance };
+      return { loggedIn: true, username: username.trim(), balance: balance || "0.000" };
     }
     return { loggedIn: false, username: null, balance: "0.000" };
   }
 
-  // Create JWT for SolPrime internals when user logs in
   function syncInternalSession(addr) {
     const header = btoa(JSON.stringify({ alg: "HS256", typ: "JWT" }));
     const now = Math.floor(Date.now() / 1000);
@@ -33,15 +41,13 @@
     } catch(e) {}
   }
 
-  // Update Header UI
   function renderHeader() {
     const player = getPlayer();
     
-    // Find auth container in header
+    // Find auth buttons in header
     const connectBtns = document.querySelectorAll('button[data-auth-plate="connect"], button[data-node-id="671:9397"]');
     
     connectBtns.forEach((btn, idx) => {
-      // If there are duplicates, hide the extra ones
       if (idx > 0) {
         btn.style.display = 'none';
         return;
@@ -49,7 +55,7 @@
       btn.style.display = 'flex';
 
       if (!player.loggedIn) {
-        // Logged OUT state
+        // LOGGED OUT STATE
         btn.innerHTML = `
           <span style="display:flex; align-items:center; gap:6px; font-weight:800; font-size:14px; color:#ffffff;">
             <span>⚡</span> Sign In / Play
@@ -68,7 +74,7 @@
           openAuthModal();
         };
       } else {
-        // Logged IN state
+        // LOGGED IN STATE
         btn.innerHTML = `
           <div style="display:flex; align-items:center; gap:8px;">
             <span style="display:flex; align-items:center; gap:5px; color:#00ffa3; font-weight:800; font-size:13.5px;">
@@ -94,13 +100,12 @@
       }
     });
 
-    // Remove any extra injected duplicate buttons
+    // Remove rogue injected buttons
     document.querySelectorAll('#dicesbets-cashier-btn').forEach((b, i) => {
       if (i > 0) b.remove();
     });
   }
 
-  // Auth / Registration Modal
   function openAuthModal() {
     if (document.getElementById('dicesbets-auth-modal')) return;
 
@@ -162,7 +167,7 @@
       modal.remove();
       renderHeader();
 
-      // Open Cashier so user can deposit right away
+      // Open Cashier
       if (window.openCashierModal) window.openCashierModal();
     };
 
@@ -189,5 +194,5 @@
   window.addEventListener('DOMContentLoaded', renderHeader);
   setInterval(renderHeader, 1200);
 
-  console.log('[Dicesbets] Real Player Auth Layer Initialized.');
+  console.log('[Dicesbets] Real Player Auth Layer Active.');
 })();
