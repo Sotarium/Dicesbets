@@ -21,7 +21,7 @@
     }
   };
 
-  // Standard Mock Solana Provider for games
+  // Overwrite window.solana, phantom, and solflare completely to prevent browser extension popups
   const playerPubkey = localStorage.getItem('flipsol_pubkey') || "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU";
   const mockPublicKey = {
     toBase58: () => playerPubkey,
@@ -30,21 +30,27 @@
     equals: () => true
   };
 
-  if (!window.solana) {
-    window.solana = {
-      isPhantom: true,
-      isConnected: true,
-      publicKey: mockPublicKey,
-      connect: async () => ({ publicKey: mockPublicKey }),
-      disconnect: async () => {},
-      signTransaction: async (tx) => tx,
-      signAllTransactions: async (txs) => txs,
-      signAndSendTransaction: async (tx) => ({ signature: "sim-" + Date.now() }),
-      signMessage: async (msg) => ({ signature: new Uint8Array(64) }),
-      on: () => {},
-      off: () => {},
-      emit: () => {}
-    };
+  const safeProvider = {
+    isPhantom: true,
+    isConnected: true,
+    publicKey: mockPublicKey,
+    connect: async () => ({ publicKey: mockPublicKey }),
+    disconnect: async () => {},
+    signTransaction: async (tx) => tx,
+    signAllTransactions: async (txs) => txs,
+    signAndSendTransaction: async (tx) => ({ signature: "sim-" + Date.now() }),
+    signMessage: async (msg) => ({ signature: new Uint8Array(64) }),
+    on: () => {},
+    off: () => {},
+    emit: () => {}
+  };
+
+  try {
+    Object.defineProperty(window, 'solana', { value: safeProvider, writable: true, configurable: true });
+    Object.defineProperty(window, 'phantom', { value: { solana: safeProvider }, writable: true, configurable: true });
+    Object.defineProperty(window, 'solflare', { value: safeProvider, writable: true, configurable: true });
+  } catch(e) {
+    window.solana = safeProvider;
   }
 
   const defaultJackpotRound = {
