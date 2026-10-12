@@ -205,6 +205,59 @@
       };
       return jsonResp(seatResp);
     }
+    if (url.includes('/wallet/balance')) {
+      const curBal = localStorage.getItem('flipsol_balance') || '0.001';
+      const lamports = Math.floor(parseFloat(curBal) * 1e9).toString();
+      return jsonResp({ ok: true, available: lamports, locked: '0' });
+    }
+    if (url.includes('/wallet/deposit-address')) {
+      return jsonResp({ ok: true, address: '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU', minimum: '10000000', mustSendFrom: '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU' });
+    }
+    if (url.includes('/games/blackjack/stake')) {
+      return jsonResp({ ok: true, status: 'staked' });
+    }
+    if (url.includes('/games/blackjack/boxes/pending') || url.includes('/blackjack/boxes')) {
+      return jsonResp({ ok: true, boxes: [] });
+    }
+    if (url.includes('/games/blackjack/hand')) {
+      return jsonResp({
+        ok: true,
+        status: 'confirmed',
+        hand: {
+          id: 'h-' + Date.now(),
+          status: 'dealt',
+          entropySlot: 100,
+          hands: [
+            {
+              cards: [
+                { rank: 'K', suit: 'hearts' },
+                { rank: '8', suit: 'diamonds' }
+              ],
+              bet: '10000000',
+              doubled: false,
+              closed: false,
+              outcome: 'pending',
+              payout: null,
+              box: 0
+            }
+          ],
+          boxes: [
+            {
+              seat: 0,
+              bet: '10000000',
+              side213: '0',
+              sidePair: '0',
+              side213Result: null,
+              sidePairResult: null,
+              side213Payout: '0',
+              sidePairPayout: '0',
+              insurance: '0',
+              staked: '10000000'
+            }
+          ]
+        }
+      });
+    }
     if (url.includes('/admin/blackjack/tables') || url.includes('/blackjack/tables') || url.includes('/games/blackjack/tables')) {
       return jsonResp({
         ok: true,
@@ -259,15 +312,19 @@
 
     // 5. COINFLIP
     if (url.includes('/games/coinflip')) {
+      const myPub = localStorage.getItem('flipsol_pubkey') || '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU';
+      const myUser = { pubkey: myPub, handle: localStorage.getItem('flipsol_username') || 'Player', level: 5, isBot: false };
       let games = S.get('coinflips', [
         {
-          id: "cf-1",
-          stake: "100000000",
-          side: true,
-          creator: { pubkey: "9vGg...bV", handle: "LuckySol", level: 25 },
-          status: "waiting",
-          winner: null,
-          created_at: Date.now() - 45000
+          id: 'cf-1',
+          stake: '100000000',
+          creatorSide: true,
+          creator: { pubkey: '9vGg5i33333333333333333333333333333333333bV', handle: 'LuckySol', level: 25, isBot: false },
+          opponent: null,
+          creatorWins: null,
+          status: 'open',
+          createdAt: Date.now() - 45000,
+          resolvedAt: null
         }
       ]);
 
@@ -275,17 +332,19 @@
         try {
           const body = init && init.body ? JSON.parse(init.body) : {};
           const created = {
-            id: "cf-" + Date.now(),
-            stake: body.stake || "100000000",
-            side: body.side !== undefined ? body.side : true,
-            creator: { pubkey: localStorage.getItem('flipsol_pubkey') || "You", handle: localStorage.getItem('flipsol_username') || "Player", level: 5 },
-            status: "waiting",
-            winner: null,
-            created_at: Date.now()
+            id: 'cf-' + Date.now(),
+            stake: body.stake || '100000000',
+            creatorSide: body.side !== undefined ? body.side : true,
+            creator: myUser,
+            opponent: null,
+            creatorWins: null,
+            status: 'open',
+            createdAt: Date.now(),
+            resolvedAt: null
           };
           games.unshift(created);
           S.set('coinflips', games);
-          return jsonResp({ ok: true, game: created, signature: "cf-" + Date.now() });
+          return jsonResp({ ok: true, game: created, signature: 'cf-' + Date.now() });
         } catch(e) {}
       }
       return jsonResp({ ok: true, games: games, total: games.length });
