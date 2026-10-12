@@ -22,6 +22,18 @@
   };
 
   // Overwrite window.solana, phantom, and solflare completely to prevent browser extension popups
+  
+  let solLivePrice = 111.85;
+  async function updateSolPrice() {
+    try {
+      const res = await (window.__origFetch || fetch)('https://api.binance.com/api/v3/ticker/price?symbol=SOLUSDT');
+      const data = await res.json();
+      if (data && data.price) solLivePrice = parseFloat(data.price);
+    } catch(e) {}
+  }
+  updateSolPrice();
+  setInterval(updateSolPrice, 15000);
+
   const playerPubkey = localStorage.getItem('flipsol_pubkey') || "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU";
   const mockPublicKey = {
     toBase58: () => playerPubkey,
@@ -54,31 +66,38 @@
   }
 
   const defaultJackpotRound = {
-    roundId: 1045,
-    index: 1045,
-    state: "open",
+    roundIndex: 1045,
+    opensAt: Math.floor(Date.now() / 1000) - 30,
+    closesAt: Math.floor(Date.now() / 1000) + 150,
     pot: "4500000000",
-    potSol: 4.5,
-    jackpotPaid: "0",
-    jackpotHit: false,
-    endAt: Date.now() + 180000,
-    timeRemainingMs: 145000,
-    seekMs: 0,
+    status: "open",
+    winningTicket: null,
+    winner: null,
+    winnerContributed: null,
+    payout: null,
+    rakeTaken: "0",
+    event: null,
     entries: [
       {
         id: "jp-e1",
-        contributed: "2500000000",
-        user: { pubkey: "7xKXtg...sU", handle: "NeonWhale", level: 14, avatarUrl: null }
+        amount: "2500000000",
+        ticketStart: "0",
+        ticketEnd: "2500000000",
+        player: { pubkey: "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU", handle: "NeonWhale", level: 14, isBot: false }
       },
       {
         id: "jp-e2",
-        contributed: "1200000000",
-        user: { pubkey: "4kLm97...Sol", handle: "SolDegen", level: 28, avatarUrl: null }
+        amount: "1200000000",
+        ticketStart: "2500000000",
+        ticketEnd: "3700000000",
+        player: { pubkey: "4kLm97x9999999999999999999999999999999999Sol", handle: "SolDegen", level: 28, isBot: false }
       },
       {
         id: "jp-e3",
-        contributed: "800000000",
-        user: { pubkey: "9vGg5i...bV", handle: "LuckySol", level: 25, avatarUrl: null }
+        amount: "800000000",
+        ticketStart: "3700000000",
+        ticketEnd: "4500000000",
+        player: { pubkey: "9vGg5i33333333333333333333333333333333333bV", handle: "LuckySol", level: 25, isBot: false }
       }
     ]
   };
@@ -131,12 +150,12 @@
         maintenance: { on: false },
         limits: { blackjackMaxBet: "5000000000", maxBetSol: 50 },
         blackjackTables: true,
-        solPriceUsd: 185.50
+        solPriceUsd: solLivePrice
       });
     }
 
     if (url.includes('/api/sol-price') || url.includes('/sol-price')) {
-      return jsonResp({ ok: true, price: 185.50, usd: 185.50 });
+      return jsonResp({ ok: true, price: solLivePrice, usd: solLivePrice });
     }
 
     if (url.includes('/auth/session') || url.includes('/session')) {
@@ -158,13 +177,22 @@
       return jsonResp({ ok: true, active: false, prize: 5000, leaderboard: [] });
     }
 
-    if (url.includes('/chat/rooms') || url.includes('/rooms')) {
+    if (url.includes('/chat/rooms')) {
       return jsonResp({
         ok: true,
         rooms: [
-          { id: "global", name: "English (Global)", messages: [] }
+          { id: "global", name: "English (Global)", minLevel: 0, slowModeSeconds: 0, locked: false }
         ]
       });
+    }
+
+    if (url.includes('/chat/') && url.includes('/messages')) {
+      const defaultMsgs = [
+        { id: "m-1", room: "global", at: Date.now() - 120000, pubkey: "9vGg5i33333333333333333333333333333333333bV", name: "LuckySol", handle: "LuckySol", level: 25, role: "player", body: "Welcome to FlipSol! 🎲🔥" },
+        { id: "m-2", room: "global", at: Date.now() - 60000, pubkey: "4kLm97x9999999999999999999999999999999999Sol", name: "SolDegen", handle: "SolDegen", level: 14, role: "player", body: "GL to all players!" }
+      ];
+      let storedMsgs = S.get('chat_messages', defaultMsgs);
+      return jsonResp({ ok: true, messages: storedMsgs });
     }
 
     // 2. JACKPOT ROUTES
@@ -312,18 +340,29 @@
 
     // 4. DICE DUELS
     if (url.includes('/games/dice')) {
+      const myPub = localStorage.getItem('flipsol_pubkey') || '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU';
       let duels = S.get('duels', [
         {
           id: "duel-1",
           stake: "50000000",
+          pot: "100000000",
           capacity: 2,
-          format: "1v1",
+          format: "freeForAll",
           direction: "high",
-          creator: { pubkey: "7xKX...sU", handle: "NeonWhale", level: 14 },
-          players: [{ pubkey: "7xKX...sU", handle: "NeonWhale", level: 14, roll: null }],
-          status: "waiting",
-          winner: null,
-          created_at: Date.now() - 60000
+          rakeBps: 200,
+          status: "open",
+          creator: { pubkey: "9vGg5i33333333333333333333333333333333333bV", handle: "LuckySol", level: 25, isBot: false },
+          seats: [
+            { seatIndex: 0, player: { pubkey: "9vGg5i33333333333333333333333333333333333bV", handle: "LuckySol", level: 25, isBot: false }, mode: "wallet", roll: null, tiebreak: null, payout: "0", team: null, joinedAt: Date.now() - 60000 }
+          ],
+          winnerSeat: null,
+          payout: null,
+          potentialPayout: "98000000",
+          createdAt: Date.now() - 60000,
+          expiresAt: Date.now() + 300000,
+          matchedAt: null,
+          resolvedAt: null,
+          resolvedAtMs: null
         }
       ]);
 
@@ -425,15 +464,61 @@
   };
 
   // Safe Mock WebSocket
+  const activeSockets = new Set();
   class SafeWS {
     constructor(url) {
       this.url = url;
       this.readyState = 1;
-      setTimeout(() => { if (this.onopen) this.onopen({ type: 'open' }); }, 50);
+      activeSockets.add(this);
+      setTimeout(() => {
+        if (this.onopen) this.onopen({ type: 'open' });
+        // Send protocol v1 handshake!
+        setTimeout(() => {
+          if (this.onmessage) {
+            this.onmessage({ data: JSON.stringify({ t: 'hello', v: 1 }) });
+          }
+        }, 10);
+      }, 50);
     }
-    send() {}
+    send(data) {
+      try {
+        const msg = JSON.parse(data);
+        if (msg.op === 'say') {
+          const myPub = localStorage.getItem('flipsol_pubkey') || '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU';
+          const myHandle = localStorage.getItem('flipsol_username') || 'Player';
+          const newMsg = {
+            id: 'm-' + Date.now(),
+            room: msg.room || 'global',
+            at: Date.now(),
+            pubkey: myPub,
+            name: myHandle,
+            handle: myHandle,
+            level: 5,
+            role: 'player',
+            body: msg.body,
+            replyTo: msg.replyTo || null
+          };
+          let list = S.get('chat_messages', []);
+          list.push(newMsg);
+          S.set('chat_messages', list.slice(-100));
+
+          // Broadcast to all active sockets as batch event
+          activeSockets.forEach(s => {
+            if (s.onmessage) {
+              s.onmessage({
+                data: JSON.stringify({
+                  t: 'batch',
+                  events: [{ e: 'chat.message', message: newMsg }]
+                })
+              });
+            }
+          });
+        }
+      } catch(e) {}
+    }
     close() {
       this.readyState = 3;
+      activeSockets.delete(this);
       if (this.onclose) this.onclose({ type: 'close' });
     }
   }

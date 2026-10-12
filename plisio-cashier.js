@@ -307,12 +307,8 @@
     });
 
     if (affiliatesLink) {
-      // Walk up to find a flex container parent we can append to
-      let container = affiliatesLink.parentElement;
-      // Go up a couple levels to find the nav row
-      for (let i = 0; i < 3; i++) {
-        if (container && container.parentElement) container = container.parentElement;
-      }
+      const affAnchor = affiliatesLink.closest('a') || affiliatesLink;
+      const navContainer = affAnchor.parentElement;
 
       const pill = document.createElement('button');
       pill.id = 'flipsol-nav-balance';
@@ -321,8 +317,8 @@
         background: linear-gradient(180deg, rgba(34,35,52,0.95) 0%, rgba(20,21,32,0.95) 100%);
         border: 1px solid rgba(255,255,255,0.1);
         box-shadow: rgba(255,255,255,0.05) 0px 1px 0px inset, rgba(0,0,0,0.5) 0px 4px 12px;
-        border-radius: 10px; padding: 0 14px; height: 38px;
-        cursor: pointer; margin-left: 10px; flex-shrink: 0;
+        border-radius: 10px; padding: 0 14px; height: 36px;
+        cursor: pointer; margin-left: 20px; flex-shrink: 0;
       `;
       pill.innerHTML = `
         <div style="width:18px;height:18px;border-radius:50%;background:#10111a;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
@@ -332,10 +328,8 @@
       `;
       pill.onclick = (e) => { e.preventDefault(); e.stopPropagation(); window.openCashierModal(); };
 
-      // Insert after the Affiliates link's closest li/div ancestor inside the nav row
-      const insertAfter = affiliatesLink.closest('li') || affiliatesLink.closest('div') || affiliatesLink;
-      if (insertAfter && insertAfter.parentElement) {
-        insertAfter.parentElement.insertBefore(pill, insertAfter.nextSibling);
+      if (navContainer) {
+        navContainer.insertBefore(pill, affAnchor.nextSibling);
       }
     }
   }
