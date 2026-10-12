@@ -21,6 +21,32 @@
     }
   };
 
+  // Standard Mock Solana Provider for games
+  const playerPubkey = localStorage.getItem('flipsol_pubkey') || "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU";
+  const mockPublicKey = {
+    toBase58: () => playerPubkey,
+    toString: () => playerPubkey,
+    toBytes: () => new Uint8Array(32),
+    equals: () => true
+  };
+
+  if (!window.solana) {
+    window.solana = {
+      isPhantom: true,
+      isConnected: true,
+      publicKey: mockPublicKey,
+      connect: async () => ({ publicKey: mockPublicKey }),
+      disconnect: async () => {},
+      signTransaction: async (tx) => tx,
+      signAllTransactions: async (txs) => txs,
+      signAndSendTransaction: async (tx) => ({ signature: "sim-" + Date.now() }),
+      signMessage: async (msg) => ({ signature: new Uint8Array(64) }),
+      on: () => {},
+      off: () => {},
+      emit: () => {}
+    };
+  }
+
   const defaultJackpotRound = {
     roundId: 1045,
     index: 1045,
