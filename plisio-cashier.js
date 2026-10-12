@@ -41,27 +41,26 @@
     backdrop.innerHTML = `
       <style>
         .bb-hover-btn {
-          background: rgb(34, 35, 46);
+          background: rgb(26, 27, 36);
           border-radius: 10px;
-          border: 1px solid rgba(255, 255, 255, 0.05);
-          box-shadow: rgba(139, 92, 246, 0.38) 0px 1px 0px inset, rgba(255, 255, 255, 0.05) 0px 0px 0px 1px;
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          box-shadow: rgba(0, 0, 0, 0.4) 0px 2px 6px;
           color: #ffffff;
-          transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+          transition: background 0.15s ease, opacity 0.15s ease;
         }
         .bb-hover-btn:hover {
-          background: rgba(139, 92, 246, 0.25) !important;
-          border-color: rgba(167, 139, 250, 0.45) !important;
-          box-shadow: rgba(167, 139, 250, 0.5) 0px 1px 0px inset, rgba(139, 92, 246, 0.3) 0px 4px 18px !important;
+          background: rgb(34, 35, 48);
+          opacity: 0.95;
         }
         .bb-gray-btn {
           background: transparent;
           color: #71717a;
           border-radius: 8px;
-          transition: all 0.2s ease;
+          transition: background 0.15s ease, color 0.15s ease;
         }
         .bb-gray-btn:hover {
-          background: rgba(139, 92, 246, 0.18) !important;
-          color: #ede9fe !important;
+          background: rgba(255, 255, 255, 0.06);
+          color: #e4e4e7;
         }
       </style>
 

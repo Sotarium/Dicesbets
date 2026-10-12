@@ -29,53 +29,31 @@
       }
       btn.style.display = 'flex';
 
-      if (!player.loggedIn) {
-        // Logged OUT: Clean Sign In
-        btn.innerHTML = `
-          <span style="display:flex; align-items:center; gap:6px; font-weight:700; font-size:13.5px; color:#ffffff; letter-spacing:0.2px;">
-            <span>⚡</span> Sign In
-          </span>
-        `;
-        btn.style.background = 'linear-gradient(180deg, #181926 0%, #10111a 100%)';
-        btn.style.border = '1px solid rgba(255, 255, 255, 0.08)';
-        btn.style.boxShadow = 'rgba(255, 255, 255, 0.05) 0px 1px 0px inset, rgba(0, 0, 0, 0.5) 0px 4px 12px';
-        btn.style.padding = '0 18px';
-        btn.style.height = '40px';
-        btn.style.borderRadius = '10px';
-        btn.style.width = 'auto';
-
-        btn.onclick = (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          openAuthModal();
-        };
-      } else {
-        // Logged IN: Exact Pill from user screenshot: [ (Solana Icon) 0.001 ]
-        btn.innerHTML = `
-          <div style="display:flex; align-items:center; gap:8px;">
-            <div style="width:20px; height:20px; border-radius:50%; background:#10111a; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
-              <img src="/sol-3d.png" width="16" height="16" style="object-fit:contain;" alt="" />
-            </div>
-            <span style="color:#ffffff; font-weight:800; font-size:14.5px; letter-spacing:0.3px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
-              ${player.balance}
-            </span>
+      // Always show clean balance pill: [ (SOL Icon) 0.001 ]
+      btn.innerHTML = `
+        <div style="display:flex; align-items:center; gap:8px;">
+          <div style="width:20px; height:20px; border-radius:50%; background:#10111a; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+            <img src="/sol-3d.png" width="16" height="16" style="object-fit:contain;" alt="" />
           </div>
-        `;
-        btn.style.background = 'linear-gradient(180deg, rgba(34, 35, 52, 0.95) 0%, rgba(20, 21, 32, 0.95) 100%)';
-        btn.style.border = '1px solid rgba(139, 92, 246, 0.25)';
-        btn.style.boxShadow = 'rgba(139, 92, 246, 0.2) 0px 1px 0px inset, rgba(0, 0, 0, 0.6) 0px 4px 16px';
-        btn.style.padding = '0 18px';
-        btn.style.height = '42px';
-        btn.style.borderRadius = '12px';
-        btn.style.width = 'auto';
-        btn.style.cursor = 'pointer';
+          <span style="color:#ffffff; font-weight:800; font-size:14.5px; letter-spacing:0.3px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+            ${player.balance}
+          </span>
+        </div>
+      `;
+      btn.style.background = 'linear-gradient(180deg, rgba(34, 35, 52, 0.95) 0%, rgba(20, 21, 32, 0.95) 100%)';
+      btn.style.border = '1px solid rgba(255, 255, 255, 0.1)';
+      btn.style.boxShadow = 'rgba(255, 255, 255, 0.05) 0px 1px 0px inset, rgba(0, 0, 0, 0.6) 0px 4px 16px';
+      btn.style.padding = '0 18px';
+      btn.style.height = '42px';
+      btn.style.borderRadius = '12px';
+      btn.style.width = 'auto';
+      btn.style.cursor = 'pointer';
 
-        btn.onclick = (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          if (window.openCashierModal) window.openCashierModal();
-        };
-      }
+      btn.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (window.openCashierModal) window.openCashierModal();
+      };
     });
 
     // Remove any extra cashiers injected previously
@@ -142,8 +120,72 @@
     };
   }
 
+  // SUPPRESS ALL WALLET CONNECT MODALS & REDIRECT TO CASHIER
+  const killWalletModals = () => {
+    // 1. Target any wallet modal elements
+    const selectors = [
+      '.wallet-adapter-modal',
+      '.wallet-adapter-modal-wrapper',
+      '.mobile-wallet-adapter-modal',
+      '.mobile-wallet-adapter-embedded-modal',
+      'div[role="dialog"]:has(.wallet-adapter-list)',
+      'div[role="dialog"]:has(#mobile-wallet-adapter-launch-action)'
+    ];
+    selectors.forEach(sel => {
+      document.querySelectorAll(sel).forEach(el => el.remove());
+    });
+
+    // 2. Hide any modal with "Connect Wallet" title
+    document.querySelectorAll('div[role="dialog"]').forEach(dialog => {
+      const text = dialog.innerText || '';
+      if (text.includes('Connect Wallet') || text.includes('Select Wallet') || text.includes('Phantom') || text.includes('Solflare')) {
+        dialog.remove();
+        if (window.openCashierModal) window.openCashierModal();
+      }
+    });
+  };
+
+  // Global click interceptor: if anything triggers a wallet connect, open Cashier directly instead
+  document.addEventListener('click', (e) => {
+    const target = e.target.closest('button, a, [role="button"]');
+    if (!target) return;
+    const txt = (target.innerText || '').toLowerCase();
+    if (txt.includes('connect wallet') || txt.includes('select wallet')) {
+      e.preventDefault();
+      e.stopPropagation();
+      killWalletModals();
+      if (window.openCashierModal) window.openCashierModal();
+    }
+  }, true);
+
+  // MutationObserver to immediately zap any wallet connect popup
+  const observer = new MutationObserver(() => {
+    killWalletModals();
+  });
+  if (document.body) {
+    observer.observe(document.body, { childList: true, subtree: true });
+  } else {
+    window.addEventListener('DOMContentLoaded', () => {
+      observer.observe(document.body, { childList: true, subtree: true });
+    });
+  }
+
+  // Inject CSS to permanently suppress wallet adapter popups
+  const style = document.createElement('style');
+  style.innerHTML = `
+    .wallet-adapter-modal,
+    .wallet-adapter-modal-container,
+    .mobile-wallet-adapter-embedded-modal,
+    .mobile-wallet-adapter-modal {
+      display: none !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
+    }
+  `;
+  document.head.appendChild(style);
+
   window.addEventListener('DOMContentLoaded', renderHeader);
   setInterval(renderHeader, 1200);
 
-  console.log('[FlipSol] Clean Balance Pill Active.');
+  console.log('[FlipSol] Wallet modals suppressed. Pure deposit cashier active.');
 })();
