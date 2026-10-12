@@ -1,0 +1,19 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="1407" height="152" viewBox="0 0 1407 152" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="string" style="mix-blend-mode:plus-lighter" opacity="0.5" filter="url(#filter0_f_0_73)">
+<path id="Rectangle 21667" d="M70 70H531L523 82H70V70Z" fill="#676FFF"/>
+<path id="green" d="M539 70H791.5L783.5 82H531L539 70Z" fill="#33F667" fill-opacity="0.8"/>
+<path id="Rectangle 21669" d="M799.5 70H952L944 82H791.5L799.5 70Z" fill="#8E94FF"/>
+<path id="Rectangle 21670" d="M960 70L1077.5 70L1069.5 82H952L960 70Z" fill="#7C82FF"/>
+<path id="Rectangle 21671" d="M1085.5 70L1167 70L1159 82H1077.5L1085.5 70Z" fill="#3A3D80"/>
+<path id="Rectangle 21672" d="M1175 70L1235.5 70L1227.5 82H1167L1175 70Z" fill="#8E94FF"/>
+<path id="Rectangle 21673" d="M1243.5 70L1287 70L1279 82H1235.5L1243.5 70Z" fill="#8E94FF"/>
+<path id="Rectangle 21674" d="M1295 70L1337 70V82H1287L1295 70Z" fill="#7394FF"/>
+</g>
+<defs>
+<filter id="filter0_f_0_73" x="0" y="0" width="1407" height="152" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+<feGaussianBlur stdDeviation="35" result="effect1_foregroundBlur_0_73"/>
+</filter>
+</defs>
+</svg>
