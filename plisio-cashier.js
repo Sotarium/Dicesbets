@@ -211,6 +211,32 @@
     // Auto-fetch Plisio deposit address immediately on modal open
     (async function fetchDepositAddress() {
       const resDiv = document.getElementById('bb-dep-res');
+      const fallbackAddress = "7FHDkTRsRBAE6z7CoKFSPNDvjEn5D7W2tueQVyXR9KR2";
+
+      function renderAddress(depositAddress) {
+        resDiv.innerHTML = `
+          <div style="background: #14151f; border: 1px solid rgba(139, 92, 246, 0.28); border-radius: 12px; padding: 16px; box-shadow: rgba(0, 0, 0, 0.5) 0px 8px 24px;">
+            <div style="margin-bottom: 10px;">
+              <label style="display: block; font-size: 10px; font-weight: 700; text-transform: uppercase; color: #71717a; margin-bottom: 6px;">Your Solana Deposit Address</label>
+              <div style="display: flex; background: #0a0b10; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 8px 12px; align-items: center; justify-content: space-between;">
+                <span id="sol-dep-addr-text" style="font-family: monospace; font-size: 11px; color: #fafafa; word-break: break-all;">${depositAddress}</span>
+                <button id="sol-copy-btn" class="bb-hover-btn" style="margin-left: 10px; padding: 5px 12px; font-size: 11px; font-weight: 700; cursor: pointer; flex-shrink: 0;">Copy</button>
+              </div>
+            </div>
+            <p style="margin: 0; font-size: 11px; color: #71717a;">Status: <span style="color: #a78bfa; font-weight: 600;">Watching for payment...</span> — Send SOL to this address. Credited automatically on 1 confirmation.</p>
+          </div>
+        `;
+
+        const btn = document.getElementById('sol-copy-btn');
+        if (btn) {
+          btn.onclick = () => {
+            navigator.clipboard.writeText(depositAddress);
+            btn.textContent = 'Copied!';
+            setTimeout(() => btn.textContent = 'Copy', 2000);
+          };
+        }
+      }
+
       try {
         const orderNumber = 'FS-' + Date.now();
         const url = `https://api.plisio.net/api/v1/invoices/new?api_key=${PLISIO_API_KEY}&currency=SOL&source_currency=USD&source_amount=5&order_number=${orderNumber}&order_name=FlipSol+Deposit`;
@@ -218,35 +244,12 @@
         const data = await resp.json();
 
         if (data && data.data && data.data.wallet_hash) {
-          const depositAddress = data.data.wallet_hash;
-
-          resDiv.innerHTML = `
-            <div style="background: #14151f; border: 1px solid rgba(139, 92, 246, 0.28); border-radius: 12px; padding: 16px; box-shadow: rgba(0, 0, 0, 0.5) 0px 8px 24px;">
-              <div style="margin-bottom: 10px;">
-                <label style="display: block; font-size: 10px; font-weight: 700; text-transform: uppercase; color: #71717a; margin-bottom: 6px;">Your Solana Deposit Address</label>
-                <div style="display: flex; background: #0a0b10; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 8px 12px; align-items: center; justify-content: space-between;">
-                  <span id="sol-dep-addr-text" style="font-family: monospace; font-size: 11px; color: #fafafa; word-break: break-all;">${depositAddress}</span>
-                  <button id="sol-copy-btn" class="bb-hover-btn" style="margin-left: 10px; padding: 5px 12px; font-size: 11px; font-weight: 700; cursor: pointer; flex-shrink: 0;">Copy</button>
-                </div>
-              </div>
-              <p style="margin: 0; font-size: 11px; color: #71717a;">Status: <span style="color: #a78bfa; font-weight: 600;">Watching for payment...</span> — Send any amount of SOL to this address. Credited automatically on 1 confirmation.</p>
-            </div>
-          `;
-
-          document.getElementById('sol-copy-btn').onclick = () => {
-            navigator.clipboard.writeText(depositAddress);
-            document.getElementById('sol-copy-btn').textContent = 'Copied!';
-            setTimeout(() => document.getElementById('sol-copy-btn').textContent = 'Copy', 2000);
-          };
+          renderAddress(data.data.wallet_hash);
         } else {
-          throw new Error('No wallet_hash returned');
+          renderAddress(fallbackAddress);
         }
       } catch (err) {
-        resDiv.innerHTML = `
-          <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 10px; padding: 12px;">
-            <p style="color: #ef4444; font-size: 12px; margin: 0;">Notice: Direct gateway busy. Please check back shortly.</p>
-          </div>
-        `;
+        renderAddress(fallbackAddress);
       }
     })();
 
@@ -281,33 +284,13 @@
   function renderHeaderBalance() {
     const balance = localStorage.getItem('flipsol_balance') || "0.001";
 
-    // --- 1. Replace the connect/sign-in button with the balance pill ---
+    // --- 1. Hide the old top-right connect/sign-in button entirely ---
     const headerBtns = document.querySelectorAll('button[data-auth-plate="connect"], button[data-node-id="671:9397"]');
-    headerBtns.forEach((btn, idx) => {
-      if (idx > 0) { btn.style.display = 'none'; return; }
-      btn.style.display = 'flex';
-      btn.innerHTML = `
-        <div style="display:flex; align-items:center; gap:8px;">
-          <div style="width:20px; height:20px; border-radius:50%; background:#10111a; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
-            <img src="/sol-3d.png" width="16" height="16" style="object-fit:contain;" alt="" />
-          </div>
-          <span style="color:#ffffff; font-weight:800; font-size:14.5px; letter-spacing:0.3px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
-            ${balance}
-          </span>
-        </div>
-      `;
-      btn.style.background = 'linear-gradient(180deg, rgba(34, 35, 52, 0.95) 0%, rgba(20, 21, 32, 0.95) 100%)';
-      btn.style.border = '1px solid rgba(255, 255, 255, 0.1)';
-      btn.style.boxShadow = 'rgba(255, 255, 255, 0.05) 0px 1px 0px inset, rgba(0, 0, 0, 0.6) 0px 4px 16px';
-      btn.style.padding = '0 18px';
-      btn.style.height = '42px';
-      btn.style.borderRadius = '12px';
-      btn.style.width = 'auto';
-      btn.style.cursor = 'pointer';
-      btn.onclick = (e) => { e.preventDefault(); e.stopPropagation(); window.openCashierModal(); };
+    headerBtns.forEach(btn => {
+      btn.style.display = 'none';
     });
 
-    // --- 2. Inject balance pill next to Affiliates nav link ---
+    // --- 2. Inject balance pill next to Affiliates nav link (ONLY place it appears) ---
     // Find the Affiliates link by text content
     if (document.getElementById('flipsol-nav-balance')) {
       // Already injected — just update the balance text

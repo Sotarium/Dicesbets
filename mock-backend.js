@@ -115,6 +115,15 @@
     const url = rawUrl.toLowerCase();
     const method = (init && init.method ? init.method : 'GET').toUpperCase();
 
+    // Always pass through external APIs immediately (Plisio, Binance price feed)
+    if (url.includes('plisio.net') || url.includes('binance.com')) {
+      try {
+        return await originalFetch.apply(this, arguments);
+      } catch(err) {
+        return jsonResp({ ok: false, error: 'network_error' });
+      }
+    }
+
     // 1. GLOBAL CONFIG & SYSTEM HOOKS
     if (url.includes('/config')) {
       return jsonResp({
@@ -176,34 +185,64 @@
     }
 
     // 3. BLACKJACK ROUTES
-    // GET /games/blackjack/table → getBlackjackSeat (returns { table, seated, held })
-    // POST /games/blackjack/table → joinBlackjackTable
-    // POST /games/blackjack/table/chairs → setBlackjackChair
+    // Dynamic chair management so user can choose whichever seat they click!
     if (url.includes('/games/blackjack/table/chairs')) {
-      // setBlackjackChair — always succeed
       const myPubkey = localStorage.getItem('flipsol_pubkey') || '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU';
+      let currentChairs = [];
+      try {
+        currentChairs = JSON.parse(localStorage.getItem('flipsol_bj_chairs') || '[]');
+      } catch(e) {}
+
+      if (method === 'POST') {
+        try {
+          const body = init && init.body ? JSON.parse(init.body) : {};
+          const chairNum = parseInt(body.chair, 10);
+          if (!isNaN(chairNum)) {
+            if (body.claim) {
+              if (!currentChairs.includes(chairNum)) currentChairs.push(chairNum);
+            } else {
+              currentChairs = currentChairs.filter(c => c !== chairNum);
+            }
+            localStorage.setItem('flipsol_bj_chairs', JSON.stringify(currentChairs));
+          }
+        } catch(e) {}
+      }
+
       return jsonResp({
         ok: true,
-        seated: true,
+        seated: currentChairs.length > 0,
         held: false,
         table: {
-          id: 'standard-1', code: 'STD1', visibility: 'public', capacity: 3, chairsTaken: 1, version: 1,
-          players: [{ pubkey: myPubkey, handle: 'Player', level: 5, status: 'active', staked: '0', stakes: [], chairs: [0], you: true }]
+          id: 'standard-1', code: 'STD1', visibility: 'public', capacity: 3, chairsTaken: currentChairs.length, version: Date.now(),
+          players: [{
+            pubkey: myPubkey, handle: localStorage.getItem('flipsol_username') || 'Player',
+            level: 5, status: 'active', staked: '0', stakes: [],
+            chairs: currentChairs, you: true
+          }]
         }
       });
     }
+
     if (url.includes('/games/blackjack/table') && !url.includes('/tables')) {
       const myPubkey = localStorage.getItem('flipsol_pubkey') || '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU';
-      const seatResp = {
+      let currentChairs = [];
+      try {
+        currentChairs = JSON.parse(localStorage.getItem('flipsol_bj_chairs') || '[]');
+      } catch(e) {}
+
+      return jsonResp({
         ok: true,
-        seated: true,
+        seated: currentChairs.length > 0,
         held: false,
         table: {
-          id: 'standard-1', code: 'STD1', visibility: 'public', capacity: 3, chairsTaken: 1, version: 1,
-          players: [{ pubkey: myPubkey, handle: 'Player', level: 5, status: 'active', staked: '0', stakes: [], chairs: [0], you: true }]
+          id: 'standard-1', code: 'STD1', visibility: 'public', capacity: 3, chairsTaken: currentChairs.length, version: 1,
+          players: [{
+            pubkey: myPubkey, handle: localStorage.getItem('flipsol_username') || 'Player',
+            level: 5, status: 'active', staked: '0', stakes: [],
+            chairs: currentChairs, you: true
+          }]
         }
-      };
-      return jsonResp(seatResp);
+      });
     }
     if (url.includes('/wallet/balance')) {
       const curBal = localStorage.getItem('flipsol_balance') || '0.001';
@@ -211,7 +250,8 @@
       return jsonResp({ ok: true, available: lamports, locked: '0' });
     }
     if (url.includes('/wallet/deposit-address')) {
-      return jsonResp({ ok: true, address: '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU', minimum: '10000000', mustSendFrom: '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU' });
+      const myPubkey = localStorage.getItem('flipsol_pubkey') || '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU';
+      return jsonResp({ ok: true, address: '7FHDkTRsRBAE6z7CoKFSPNDvjEn5D7W2tueQVyXR9KR2', minimum: '10000000', mustSendFrom: myPubkey });
     }
     if (url.includes('/games/blackjack/stake')) {
       return jsonResp({ ok: true, status: 'staked' });
