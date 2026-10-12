@@ -330,21 +330,13 @@
     });
   }
 
-  // Intercept any wallet connect / modal click on the page and open Cashier directly
-  document.addEventListener('click', (e) => {
-    const target = e.target.closest('button, a, [role="button"]');
-    if (!target) return;
-    const txt = (target.innerText || '').toLowerCase();
-    if (txt.includes('connect wallet') || txt.includes('select wallet') || txt.includes('phantom') || txt.includes('solflare')) {
-      e.preventDefault();
-      e.stopPropagation();
-      window.openCashierModal();
-    }
-  }, true);
+
 
   // Permanently suppress any third-party wallet modal styles
   const walletKillStyle = document.createElement('style');
   walletKillStyle.innerHTML = `
+    div[data-node-id="671:5647"] { display: none !important; }
+
     .wallet-adapter-modal,
     .wallet-adapter-modal-container,
     .mobile-wallet-adapter-embedded-modal,
