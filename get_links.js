@@ -1,6 +1,6 @@
 const https = require('https');
 
-https.get('https://www.solprime.io/home', (res) => {
+https.get('/home', (res) => {
   let data = '';
   res.on('data', (chunk) => data += chunk);
   res.on('end', () => {

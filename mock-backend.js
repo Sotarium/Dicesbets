@@ -1,17 +1,15 @@
 /**
- * DICESBETS COMPREHENSIVE CLIENT DATA & GAME ENGINE
- * Fixes:
- * - Jackpot: live round, current entries, ticker, progressive pot
- * - Blackjack: default lobby, active table state, seats, dealer card shoe
- * - Dice Duels: duels list, creation handler, rolls
- * - Coinflip: games list, create game handler
- * - Affiliates: commission config, rate, statistics, wallet referee network
+ * DICESBETS COMPREHENSIVE INTERCEPTOR & GAME ENGINE
+ * Intercepts all requests:
+ * - /cases/odds, /config, /auth/session, /race, /chat/rooms, /api/sol-price
+ * - Jackpot: /games/jackpot/current, rounds, events, bet
+ * - Dice Duels & Coinflip & Blackjack
+ * Prevents ANY network request from failing or throwing CORS
  */
 
-(function() {
+(function () {
   if (typeof window === 'undefined') return;
 
-  // Local Storage Data Store
   const S = {
     get: (k, d) => {
       try { const v = localStorage.getItem('dicesbets_' + k); return v ? JSON.parse(v) : d; }
@@ -23,12 +21,11 @@
     }
   };
 
-  // 1. Initial State Definitions
   const defaultJackpotRound = {
     roundId: 1045,
     index: 1045,
     state: "open",
-    pot: "4500000000", // in lamports (4.5 SOL)
+    pot: "4500000000",
     potSol: 4.5,
     jackpotPaid: "0",
     jackpotHit: false,
@@ -66,16 +63,8 @@
         player: { pubkey: "7xKXtg...sU", handle: "NeonWhale", level: 14 },
         hands: [{ cards: [{ rank: "K", suit: "hearts" }, { rank: "8", suit: "diamonds" }], bet: "500000000", total: 18, status: "standing" }]
       },
-      {
-        chair: 1,
-        player: null,
-        hands: []
-      },
-      {
-        chair: 2,
-        player: null,
-        hands: []
-      }
+      { chair: 1, player: null, hands: [] },
+      { chair: 2, player: null, hands: [] }
     ],
     dealer: {
       cards: [{ rank: "A", suit: "spades" }, { rank: "hidden", suit: "hidden" }],
@@ -83,19 +72,61 @@
     }
   };
 
-  // Helper response builder
   const jsonResp = (obj, status = 200) => new Response(JSON.stringify(obj), {
     status,
     headers: { 'Content-Type': 'application/json' }
   });
 
-  // 2. Fetch Interceptor
   const originalFetch = window.fetch;
-  window.fetch = async function(input, init) {
-    const url = typeof input === 'string' ? input : (input && input.url ? input.url : '');
+  window.fetch = async function (input, init) {
+    const rawUrl = typeof input === 'string' ? input : (input && input.url ? input.url : '');
+    const url = rawUrl.toLowerCase();
     const method = (init && init.method ? init.method : 'GET').toUpperCase();
 
-    // --- A. JACKPOT ROUTES ---
+    // 1. GLOBAL CONFIG & SYSTEM HOOKS
+    if (url.includes('/config')) {
+      return jsonResp({
+        ok: true,
+        maintenance: { on: false },
+        limits: { blackjackMaxBet: "5000000000", maxBetSol: 50 },
+        blackjackTables: true,
+        solPriceUsd: 185.50
+      });
+    }
+
+    if (url.includes('/api/sol-price') || url.includes('/sol-price')) {
+      return jsonResp({ ok: true, price: 185.50, usd: 185.50 });
+    }
+
+    if (url.includes('/auth/session') || url.includes('/session')) {
+      return jsonResp({
+        ok: true,
+        session: {
+          address: localStorage.getItem('dicesbets_pubkey') || "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU",
+          token: "valid-session-token",
+          expiresAt: Date.now() + 864000000
+        }
+      });
+    }
+
+    if (url.includes('/cases/odds') || url.includes('/odds')) {
+      return jsonResp({ ok: true, odds: [] });
+    }
+
+    if (url.includes('/race')) {
+      return jsonResp({ ok: true, active: false, prize: 5000, leaderboard: [] });
+    }
+
+    if (url.includes('/chat/rooms') || url.includes('/rooms')) {
+      return jsonResp({
+        ok: true,
+        rooms: [
+          { id: "global", name: "English (Global)", messages: [] }
+        ]
+      });
+    }
+
+    // 2. JACKPOT ROUTES
     if (url.includes('/games/jackpot/current') || url.includes('/jackpot/current')) {
       return jsonResp({ ok: true, round: defaultJackpotRound, entries: defaultJackpotRound.entries });
     }
@@ -108,13 +139,13 @@
     if (url.includes('/games/jackpot/progressive') || url.includes('/progressive')) {
       return jsonResp({ ok: true, totalPaid: "125000000000", lastHitAt: Date.now() - 3600000, lastHitRef: 1040 });
     }
+    if (url.includes('/jackpot/bet') || (url.includes('/jackpot') && method === 'POST')) {
+      return jsonResp({ ok: true, round: defaultJackpotRound });
+    }
 
-    // --- B. BLACKJACK ROUTES ---
+    // 3. BLACKJACK ROUTES
     if (url.includes('/games/blackjack/tables/') || url.includes('/blackjack/table')) {
-      if (url.includes('/stake') || url.includes('/action') || url.includes('/ready') || url.includes('/unstake')) {
-        return jsonResp({ ok: true, round: defaultBlackjackRound, status: "confirmed" });
-      }
-      return jsonResp({ ok: true, round: defaultBlackjackRound, table: defaultBlackjackRound });
+      return jsonResp({ ok: true, round: defaultBlackjackRound, table: defaultBlackjackRound, status: "confirmed" });
     }
     if (url.includes('/admin/blackjack/tables') || url.includes('/blackjack/tables')) {
       return jsonResp({
@@ -128,7 +159,7 @@
       });
     }
 
-    // --- C. DICE DUELS ---
+    // 4. DICE DUELS
     if (url.includes('/games/dice')) {
       let duels = S.get('duels', [
         {
@@ -154,8 +185,8 @@
             capacity: body.capacity || 2,
             format: body.format || "1v1",
             direction: body.direction || "high",
-            creator: { pubkey: window.dicesbetsState?.publicKey || "You", handle: localStorage.getItem('dicesbets_username') || "Player", level: 5 },
-            players: [{ pubkey: window.dicesbetsState?.publicKey || "You", handle: localStorage.getItem('dicesbets_username') || "Player", level: 5, roll: null }],
+            creator: { pubkey: localStorage.getItem('dicesbets_pubkey') || "You", handle: localStorage.getItem('dicesbets_username') || "Player", level: 5 },
+            players: [{ pubkey: localStorage.getItem('dicesbets_pubkey') || "You", handle: localStorage.getItem('dicesbets_username') || "Player", level: 5, roll: null }],
             status: "waiting",
             winner: null,
             created_at: Date.now()
@@ -168,7 +199,7 @@
       return jsonResp({ ok: true, duels: duels, total: duels.length });
     }
 
-    // --- D. COINFLIP ---
+    // 5. COINFLIP
     if (url.includes('/games/coinflip')) {
       let games = S.get('coinflips', [
         {
@@ -189,7 +220,7 @@
             id: "cf-" + Date.now(),
             stake: body.stake || "100000000",
             side: body.side !== undefined ? body.side : true,
-            creator: { pubkey: window.dicesbetsState?.publicKey || "You", handle: localStorage.getItem('dicesbets_username') || "Player", level: 5 },
+            creator: { pubkey: localStorage.getItem('dicesbets_pubkey') || "You", handle: localStorage.getItem('dicesbets_username') || "Player", level: 5 },
             status: "waiting",
             winner: null,
             created_at: Date.now()
@@ -202,20 +233,24 @@
       return jsonResp({ ok: true, games: games, total: games.length });
     }
 
-    // --- E. AFFILIATES / REFERRALS ---
+    // 6. AFFILIATES
     if (url.includes('/affiliates') || url.includes('/referral')) {
       return jsonResp({
         ok: true,
         code: "DICESBETS",
         referrals: 18,
-        refereeVolume: "48500000000", // 48.5 SOL
-        totalEarnings: "1455000000",  // 1.455 SOL
-        claimable: "450000000",       // 0.45 SOL
+        refereeVolume: "48500000000",
+        totalEarnings: "1455000000",
+        claimable: "450000000",
         rateBps: 300
       });
     }
 
-    // Fallback passthrough with network error suppression
+    // Catch-all for any other SolPrime or external calls to avoid CORS
+    if (url.includes('solprime') || url.includes('/api/') || url.includes('/games/')) {
+      return jsonResp({ ok: true, data: {} });
+    }
+
     try {
       return await originalFetch.apply(this, arguments);
     } catch(err) {
@@ -223,8 +258,8 @@
     }
   };
 
-  // 3. WebSocket Mock
-  class GameWebSocket {
+  // Safe Mock WebSocket
+  class SafeWS {
     constructor(url) {
       this.url = url;
       this.readyState = 1;
@@ -236,7 +271,7 @@
       if (this.onclose) this.onclose({ type: 'close' });
     }
   }
-  window.WebSocket = GameWebSocket;
+  window.WebSocket = SafeWS;
 
-  console.log('[Dicesbets] Full Client Game Engine loaded.');
+  console.log('[Dicesbets] Comprehensive Local Interceptor Active.');
 })();

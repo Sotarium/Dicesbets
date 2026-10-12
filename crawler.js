@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const { URL } = require('url');
 
-const BASE_URL = 'https://www.solprime.io';
+const BASE_URL = '';
 const OUTPUT_DIR = path.resolve(__dirname, 'cloned_solprime');
 
 const pagesToCrawl = [

@@ -26,6 +26,6 @@ fs.writeFileSync(layoutFile, layoutContent, 'utf-8');
 console.log('Set mock mode to true in layout bundle.');
 
 // 2. Also replace "https://23-160-168-53.sslip.io" with origin or localhost relative endpoint
-replaceInDir(path.join(__dirname, '_next'), 'https://23-160-168-53.sslip.io', 'https://www.solprime.io');
+replaceInDir(path.join(__dirname, '_next'), 'https://23-160-168-53.sslip.io', '');
 
 console.log('Done.');
