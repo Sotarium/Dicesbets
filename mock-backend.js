@@ -176,15 +176,41 @@
     }
 
     // 3. BLACKJACK ROUTES
-    if (url.includes('/games/blackjack/tables/') || url.includes('/blackjack/table')) {
-      return jsonResp({ ok: true, round: defaultBlackjackRound, table: defaultBlackjackRound, status: "confirmed" });
+    // GET /games/blackjack/table → getBlackjackSeat (returns { table, seated, held })
+    // POST /games/blackjack/table → joinBlackjackTable
+    // POST /games/blackjack/table/chairs → setBlackjackChair
+    if (url.includes('/games/blackjack/table/chairs')) {
+      // setBlackjackChair — always succeed
+      const myPubkey = localStorage.getItem('flipsol_pubkey') || '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU';
+      return jsonResp({
+        ok: true,
+        seated: true,
+        held: false,
+        table: {
+          id: 'standard-1', code: 'STD1', visibility: 'public', capacity: 3, chairsTaken: 1, version: 1,
+          players: [{ pubkey: myPubkey, handle: 'Player', level: 5, status: 'active', staked: '0', stakes: [], chairs: [0], you: true }]
+        }
+      });
     }
-    if (url.includes('/admin/blackjack/tables') || url.includes('/blackjack/tables')) {
+    if (url.includes('/games/blackjack/table') && !url.includes('/tables')) {
+      const myPubkey = localStorage.getItem('flipsol_pubkey') || '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU';
+      const seatResp = {
+        ok: true,
+        seated: true,
+        held: false,
+        table: {
+          id: 'standard-1', code: 'STD1', visibility: 'public', capacity: 3, chairsTaken: 1, version: 1,
+          players: [{ pubkey: myPubkey, handle: 'Player', level: 5, status: 'active', staked: '0', stakes: [], chairs: [0], you: true }]
+        }
+      };
+      return jsonResp(seatResp);
+    }
+    if (url.includes('/admin/blackjack/tables') || url.includes('/blackjack/tables') || url.includes('/games/blackjack/tables')) {
       return jsonResp({
         ok: true,
         tables: [
-          { id: "high-roller-1", code: "HR1", name: "High Roller Salon", visibility: "public", capacity: 3, minBet: "100000000", maxBet: "5000000000" },
-          { id: "standard-1", code: "STD1", name: "Standard 1", visibility: "public", capacity: 3, minBet: "10000000", maxBet: "500000000" }
+          { id: 'high-roller-1', code: 'HR1', name: 'High Roller Salon', visibility: 'public', capacity: 3, minBet: '100000000', maxBet: '5000000000' },
+          { id: 'standard-1', code: 'STD1', name: 'Standard 1', visibility: 'public', capacity: 3, minBet: '10000000', maxBet: '500000000' }
         ],
         truncated: false,
         recentSeconds: 0
