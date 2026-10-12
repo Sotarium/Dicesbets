@@ -1,0 +1,16 @@
+{
+  "cleanUrls": true,
+  "rewrites": [
+    { "source": "/", "destination": "/home/index.html" },
+    { "source": "/home", "destination": "/home/index.html" },
+    { "source": "/earn", "destination": "/earn/index.html" },
+    { "source": "/roadmap", "destination": "/roadmap/index.html" },
+    { "source": "/play/blackjack", "destination": "/play/blackjack/index.html" },
+    { "source": "/play/coinflip", "destination": "/play/coinflip/index.html" },
+    { "source": "/play/dice-duels", "destination": "/play/dice-duels/index.html" },
+    { "source": "/play/jackpot", "destination": "/play/jackpot/index.html" },
+    { "source": "/legal/fairness", "destination": "/legal/fairness/index.html" },
+    { "source": "/legal/privacy", "destination": "/legal/privacy/index.html" },
+    { "source": "/legal/terms", "destination": "/legal/terms/index.html" }
+  ]
+}
