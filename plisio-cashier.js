@@ -1,5 +1,5 @@
 /**
- * DICESBETS EXACT BRAINBETZ CASHIER (Refined Satin Finish, No Neon)
+ * FLIPSOL EXACT BRAINBETZ CASHIER (Refined Satin Finish, No Neon)
  * - Exact dark matte palette (#12131a, #0a0b10, rgb(34, 35, 46))
  * - Premium subtle violet bevel rim and satin box-shadows
  * - Crisp Inter / Geist typography
@@ -27,10 +27,10 @@
   setInterval(fetchSolPrice, 30000);
 
   window.openCashierModal = function() {
-    if (document.getElementById('dicesbets-brainbetz-modal')) return;
+    if (document.getElementById('flipsol-brainbetz-modal')) return;
 
     const backdrop = document.createElement('div');
-    backdrop.id = 'dicesbets-brainbetz-modal';
+    backdrop.id = 'flipsol-brainbetz-modal';
     backdrop.style.cssText = `
       position: fixed; inset: 0; z-index: 999999999;
       background: rgba(4, 5, 10, 0.85); backdrop-filter: blur(12px);
@@ -133,7 +133,7 @@
               <div id="bb-view-withdraw" style="display: none;">
                 <div style="margin-bottom: 14px; background: #161722; border-radius: 10px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255,255,255,0.06);">
                   <span style="font-size: 13px; color: #a1a1aa;">Available Balance</span>
-                  <span style="font-size: 14px; font-weight: 800; color: #fafafa;">${localStorage.getItem('dicesbets_balance') || '0.001'} SOL</span>
+                  <span style="font-size: 14px; font-weight: 800; color: #fafafa;">${localStorage.getItem('flipsol_balance') || '0.001'} SOL</span>
                 </div>
 
                 <div style="margin-bottom: 14px;">
@@ -200,7 +200,7 @@
     document.getElementById('bb-btn-pay').onclick = () => {
       const amt = document.getElementById('bb-dep-input').value;
       const orderNumber = 'DB-' + Date.now();
-      const invoiceUrl = `https://plisio.net/account/invoices/new?api_key=${PLISIO_API_KEY}&source_currency=USD&source_amount=${amt}&currency=SOL&order_number=${orderNumber}&order_name=Dicesbets+Deposit`;
+      const invoiceUrl = `https://plisio.net/account/invoices/new?api_key=${PLISIO_API_KEY}&source_currency=USD&source_amount=${amt}&currency=SOL&order_number=${orderNumber}&order_name=FlipSol+Deposit`;
 
       const resDiv = document.getElementById('bb-dep-res');
       resDiv.innerHTML = `
@@ -215,7 +215,7 @@
       const amt = parseFloat(document.getElementById('bb-with-val').value);
       const addr = document.getElementById('bb-with-addr').value.trim();
       const resDiv = document.getElementById('bb-with-res');
-      const current = parseFloat(localStorage.getItem('dicesbets_balance') || '0.001');
+      const current = parseFloat(localStorage.getItem('flipsol_balance') || '0.001');
 
       if (!addr || addr.length < 20) {
         resDiv.innerHTML = '<p style="color:#ff5252; font-size:12px; margin:0;">Please enter a valid Solana address.</p>';
@@ -227,7 +227,7 @@
       }
 
       const updated = (current - amt).toFixed(3);
-      localStorage.setItem('dicesbets_balance', updated);
+      localStorage.setItem('flipsol_balance', updated);
       resDiv.innerHTML = `
         <div style="background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 10px; padding: 12px;">
           <p style="color:#fafafa; font-weight:700; font-size:13px; margin:0;">Withdrawal of ${amt} SOL Queued!</p>
@@ -237,5 +237,5 @@
     };
   };
 
-  console.log('[Dicesbets] Premium BrainBetz Cashier Initialized.');
+  console.log('[FlipSol] Premium BrainBetz Cashier Initialized.');
 })();

@@ -1,4 +1,4 @@
-# Dicesbets Game Server & Fee System
+# FlipSol Game Server & Fee System
 
 This server provides the backend REST APIs and WebSocket real-time feeds for:
 - **Dice Duels** (Create duels, 1v1 matchmaking, player queues)
@@ -17,7 +17,7 @@ node index.js
 
 ## Free Cloud Deployment (e.g. Render / Railway)
 
-1. Connect your GitHub repository `Sotarium/Dicesbets`.
+1. Connect your GitHub repository `Sotarium/FlipSol`.
 2. Set Root Directory to `server`.
 3. Set Build Command: `npm install`
 4. Set Start Command: `node index.js`

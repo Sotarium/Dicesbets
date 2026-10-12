@@ -94,7 +94,7 @@ const state = {
     }
   ],
   affiliates: {
-    code: "DICESBETS",
+    code: "FLIPSOL",
     commissionRateBps: HOUSE_FEE_BPS,
     refereeCount: 18,
     totalWagered: "48200000000", // in lamports (~48.2 SOL)
@@ -213,7 +213,7 @@ app.get('/referral/:wallet', (req, res) => {
 // WEBSOCKET LOGIC
 // ==========================================
 wss.on('connection', (ws) => {
-  ws.send(JSON.stringify({ t: "welcome", message: "Connected to Dicesbets Game Server" }));
+  ws.send(JSON.stringify({ t: "welcome", message: "Connected to FlipSol Game Server" }));
 
   ws.on('message', (message) => {
     try {
@@ -225,7 +225,7 @@ wss.on('connection', (ws) => {
 
 server.listen(PORT, () => {
   console.log(`===============================================`);
-  console.log(`Dicesbets Solana Game & Fee Server running on port ${PORT}`);
+  console.log(`FlipSol Solana Game & Fee Server running on port ${PORT}`);
   console.log(`House Wallet: ${HOUSE_WALLET}`);
   console.log(`House Fee: ${(HOUSE_FEE_BPS / 100).toFixed(2)}%`);
   console.log(`===============================================`);

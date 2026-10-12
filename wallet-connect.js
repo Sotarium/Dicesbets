@@ -1,5 +1,5 @@
 /**
- * DICESBETS HEADER & AUTH LAYER
+ * FLIPSOL HEADER & AUTH LAYER
  * - Matches user screenshot: [Affiliates] [ (SOL Icon) 0.001 ]
  * - Dark satin pill with inner border and deep gradient
  * - Clicking the balance pill directly opens the Deposit/Withdraw Cashier
@@ -9,8 +9,8 @@
   if (typeof window === 'undefined') return;
 
   function getPlayer() {
-    const username = localStorage.getItem('dicesbets_username');
-    const balance = localStorage.getItem('dicesbets_balance') || "0.001";
+    const username = localStorage.getItem('flipsol_username');
+    const balance = localStorage.getItem('flipsol_balance') || "0.001";
     return {
       loggedIn: !!(username && username.trim() !== ''),
       username: username || null,
@@ -79,14 +79,14 @@
     });
 
     // Remove any extra cashiers injected previously
-    document.querySelectorAll('#dicesbets-cashier-btn').forEach(b => b.remove());
+    document.querySelectorAll('#flipsol-cashier-btn').forEach(b => b.remove());
   }
 
   function openAuthModal() {
-    if (document.getElementById('dicesbets-auth-modal')) return;
+    if (document.getElementById('flipsol-auth-modal')) return;
 
     const modal = document.createElement('div');
-    modal.id = 'dicesbets-auth-modal';
+    modal.id = 'flipsol-auth-modal';
     modal.style.cssText = `
       position: fixed; inset: 0; z-index: 999999999;
       background: rgba(3, 5, 12, 0.85); backdrop-filter: blur(12px);
@@ -98,7 +98,7 @@
       <div style="background: #12131a; border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; width: 380px; max-width: 92vw; padding: 30px 26px; box-shadow: rgba(0, 0, 0, 0.8) 0px 32px 72px; color: white; text-align: center; position: relative;">
         <button id="auth-close" style="position: absolute; right: 16px; top: 16px; background: transparent; border: none; color: #71717a; font-size: 18px; cursor: pointer;">✕</button>
         
-        <h2 style="margin: 0 0 6px 0; font-size: 20px; font-weight: 800; color: #fff;">Join Dicesbets</h2>
+        <h2 style="margin: 0 0 6px 0; font-size: 20px; font-weight: 800; color: #fff;">Join FlipSol</h2>
         <p style="margin: 0 0 20px 0; font-size: 13px; color: #71717a;">Choose a player handle to start playing & depositing.</p>
 
         <div style="margin-bottom: 18px; text-align: left;">
@@ -130,8 +130,8 @@
         errText.style.display = 'block';
         return;
       }
-      localStorage.setItem('dicesbets_username', val);
-      localStorage.setItem('dicesbets_balance', '0.001');
+      localStorage.setItem('flipsol_username', val);
+      localStorage.setItem('flipsol_balance', '0.001');
       modal.remove();
       renderHeader();
       if (window.openCashierModal) window.openCashierModal();
@@ -145,5 +145,5 @@
   window.addEventListener('DOMContentLoaded', renderHeader);
   setInterval(renderHeader, 1200);
 
-  console.log('[Dicesbets] Clean Balance Pill Active.');
+  console.log('[FlipSol] Clean Balance Pill Active.');
 })();

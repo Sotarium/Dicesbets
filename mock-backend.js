@@ -1,5 +1,5 @@
 /**
- * DICESBETS COMPREHENSIVE INTERCEPTOR & GAME ENGINE
+ * FLIPSOL COMPREHENSIVE INTERCEPTOR & GAME ENGINE
  * Intercepts all requests:
  * - /cases/odds, /config, /auth/session, /race, /chat/rooms, /api/sol-price
  * - Jackpot: /games/jackpot/current, rounds, events, bet
@@ -12,11 +12,11 @@
 
   const S = {
     get: (k, d) => {
-      try { const v = localStorage.getItem('dicesbets_' + k); return v ? JSON.parse(v) : d; }
+      try { const v = localStorage.getItem('flipsol_' + k); return v ? JSON.parse(v) : d; }
       catch(e) { return d; }
     },
     set: (k, v) => {
-      try { localStorage.setItem('dicesbets_' + k, JSON.stringify(v)); }
+      try { localStorage.setItem('flipsol_' + k, JSON.stringify(v)); }
       catch(e) {}
     }
   };
@@ -102,7 +102,7 @@
       return jsonResp({
         ok: true,
         session: {
-          address: localStorage.getItem('dicesbets_pubkey') || "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU",
+          address: localStorage.getItem('flipsol_pubkey') || "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU",
           token: "valid-session-token",
           expiresAt: Date.now() + 864000000
         }
@@ -185,8 +185,8 @@
             capacity: body.capacity || 2,
             format: body.format || "1v1",
             direction: body.direction || "high",
-            creator: { pubkey: localStorage.getItem('dicesbets_pubkey') || "You", handle: localStorage.getItem('dicesbets_username') || "Player", level: 5 },
-            players: [{ pubkey: localStorage.getItem('dicesbets_pubkey') || "You", handle: localStorage.getItem('dicesbets_username') || "Player", level: 5, roll: null }],
+            creator: { pubkey: localStorage.getItem('flipsol_pubkey') || "You", handle: localStorage.getItem('flipsol_username') || "Player", level: 5 },
+            players: [{ pubkey: localStorage.getItem('flipsol_pubkey') || "You", handle: localStorage.getItem('flipsol_username') || "Player", level: 5, roll: null }],
             status: "waiting",
             winner: null,
             created_at: Date.now()
@@ -220,7 +220,7 @@
             id: "cf-" + Date.now(),
             stake: body.stake || "100000000",
             side: body.side !== undefined ? body.side : true,
-            creator: { pubkey: localStorage.getItem('dicesbets_pubkey') || "You", handle: localStorage.getItem('dicesbets_username') || "Player", level: 5 },
+            creator: { pubkey: localStorage.getItem('flipsol_pubkey') || "You", handle: localStorage.getItem('flipsol_username') || "Player", level: 5 },
             status: "waiting",
             winner: null,
             created_at: Date.now()
@@ -237,7 +237,7 @@
     if (url.includes('/affiliates') || url.includes('/referral')) {
       return jsonResp({
         ok: true,
-        code: "DICESBETS",
+        code: "FLIPSOL",
         referrals: 18,
         refereeVolume: "48500000000",
         totalEarnings: "1455000000",
@@ -273,5 +273,5 @@
   }
   window.WebSocket = SafeWS;
 
-  console.log('[Dicesbets] Comprehensive Local Interceptor Active.');
+  console.log('[FlipSol] Comprehensive Local Interceptor Active.');
 })();

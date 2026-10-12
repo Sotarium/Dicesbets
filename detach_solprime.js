@@ -29,8 +29,8 @@ for (const file of allFiles) {
 
   // Replace Brand text where appropriate
   if (file.endsWith('.html')) {
-    content = content.replaceAll('SolPrime', 'Dicesbets');
-    content = content.replaceAll('SOLPRIME', 'DICESBETS');
+    content = content.replaceAll('SolPrime', 'FlipSol');
+    content = content.replaceAll('SOLPRIME', 'FLIPSOL');
   }
 
   if (content !== original) {
