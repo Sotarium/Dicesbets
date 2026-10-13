@@ -26,6 +26,122 @@
   fetchLiveSolPrice();
   setInterval(fetchLiveSolPrice, 15000);
 
+  
+  // BRAINBETZ AUTH MODALS (Sign In & Sign Up)
+  window.openAuthModal = function(initialTab = 'signin') {
+    if (document.getElementById('flipsol-auth-modal')) return;
+
+    const backdrop = document.createElement('div');
+    backdrop.id = 'flipsol-auth-modal';
+    backdrop.style.cssText = `
+      position: fixed; inset: 0; z-index: 999999999;
+      background: rgba(4, 5, 10, 0.85); backdrop-filter: blur(12px);
+      display: flex; align-items: center; justify-content: center;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", sans-serif;
+    `;
+
+    backdrop.innerHTML = `
+      <div style="width: 440px; max-width: 95vw; border-radius: 16px; border: 1px solid rgba(139, 92, 246, 0.16); background: linear-gradient(165deg, rgb(20, 21, 29) 0%, rgb(18, 19, 26) 45%, rgb(15, 16, 22) 100%); box-shadow: rgba(167, 139, 250, 0.12) 0px 1px 0px inset, rgba(0, 0, 0, 0.75) 0px 32px 72px -20px; display: flex; flex-direction: column; overflow: hidden; position: relative; color: white;">
+        
+        <!-- Header Tabs & Close Button -->
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 18px; border-bottom: 1px solid rgba(255, 255, 255, 0.06); background: rgba(22, 23, 31, 0.95);">
+          <div style="display: flex; gap: 8px;">
+            <button id="bb-auth-tab-signin" class="${initialTab === 'signin' ? 'bb-hover-btn' : 'bb-gray-btn'}" style="height: 36px; padding: 0 16px; font-size: 13.5px; font-weight: 700; cursor: pointer;">
+              Sign In
+            </button>
+            <button id="bb-auth-tab-signup" class="${initialTab === 'signup' ? 'bb-hover-btn' : 'bb-gray-btn'}" style="height: 36px; padding: 0 16px; font-size: 13.5px; font-weight: 700; cursor: pointer;">
+              Sign Up
+            </button>
+          </div>
+          <button id="bb-auth-close" class="bb-gray-btn" style="width: 32px; height: 32px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px;">✕</button>
+        </div>
+
+        <!-- Body -->
+        <div style="padding: 24px;">
+          <!-- SIGN IN VIEW -->
+          <div id="bb-auth-view-signin" style="display: ${initialTab === 'signin' ? 'block' : 'none'};">
+            <div style="margin-bottom: 16px;">
+              <label style="display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; color: #a1a1aa; margin-bottom: 6px;">Username or Email</label>
+              <input id="bb-signin-user" type="text" placeholder="Enter username" value="${localStorage.getItem('flipsol_username') || 'Player'}" style="width: 100%; box-sizing: border-box; background: #161722; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 11px 14px; color: #fff; font-size: 14px; font-weight: 600; outline: none;" />
+            </div>
+
+            <div style="margin-bottom: 20px;">
+              <label style="display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; color: #a1a1aa; margin-bottom: 6px;">Password</label>
+              <input id="bb-signin-pass" type="password" placeholder="••••••••" value="password123" style="width: 100%; box-sizing: border-box; background: #161722; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 11px 14px; color: #fff; font-size: 14px; font-weight: 600; outline: none;" />
+            </div>
+
+            <button id="bb-btn-submit-signin" class="bb-hover-btn" style="width: 100%; padding: 13px; font-size: 14px; font-weight: 700; cursor: pointer;">
+              Sign In to FlipSol
+            </button>
+            <div id="bb-signin-res" style="margin-top: 12px; text-align: center;"></div>
+          </div>
+
+          <!-- SIGN UP VIEW -->
+          <div id="bb-auth-view-signup" style="display: ${initialTab === 'signup' ? 'block' : 'none'};">
+            <div style="margin-bottom: 14px;">
+              <label style="display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; color: #a1a1aa; margin-bottom: 6px;">Choose Username</label>
+              <input id="bb-signup-user" type="text" placeholder="e.g. NeonWinner" style="width: 100%; box-sizing: border-box; background: #161722; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 11px 14px; color: #fff; font-size: 14px; font-weight: 600; outline: none;" />
+            </div>
+
+            <div style="margin-bottom: 14px;">
+              <label style="display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; color: #a1a1aa; margin-bottom: 6px;">Password</label>
+              <input id="bb-signup-pass" type="password" placeholder="Create password" style="width: 100%; box-sizing: border-box; background: #161722; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 11px 14px; color: #fff; font-size: 14px; font-weight: 600; outline: none;" />
+            </div>
+
+            <div style="margin-bottom: 20px;">
+              <label style="display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; color: #a1a1aa; margin-bottom: 6px;">Referral / Affiliate Code (Optional)</label>
+              <input id="bb-signup-ref" type="text" placeholder="FLIPSOL" style="width: 100%; box-sizing: border-box; background: #161722; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 11px 14px; color: #fff; font-size: 14px; font-weight: 600; outline: none;" />
+            </div>
+
+            <button id="bb-btn-submit-signup" class="bb-hover-btn" style="width: 100%; padding: 13px; font-size: 14px; font-weight: 700; cursor: pointer;">
+              Create Free Account
+            </button>
+            <div id="bb-signup-res" style="margin-top: 12px; text-align: center;"></div>
+          </div>
+        </div>
+
+      </div>
+    `;
+
+    document.body.appendChild(backdrop);
+
+    document.getElementById('bb-auth-close').onclick = () => backdrop.remove();
+    backdrop.onclick = (e) => { if (e.target === backdrop) backdrop.remove(); };
+
+    const tabIn = document.getElementById('bb-auth-tab-signin');
+    const tabUp = document.getElementById('bb-auth-tab-signup');
+    const viewIn = document.getElementById('bb-auth-view-signin');
+    const viewUp = document.getElementById('bb-auth-view-signup');
+
+    tabIn.onclick = () => {
+      tabIn.className = 'bb-hover-btn';
+      tabUp.className = 'bb-gray-btn';
+      viewIn.style.display = 'block';
+      viewUp.style.display = 'none';
+    };
+
+    tabUp.onclick = () => {
+      tabUp.className = 'bb-hover-btn';
+      tabIn.className = 'bb-gray-btn';
+      viewUp.style.display = 'block';
+      viewIn.style.display = 'none';
+    };
+
+    document.getElementById('bb-btn-submit-signin').onclick = () => {
+      const u = document.getElementById('bb-signin-user').value.trim() || 'Player';
+      localStorage.setItem('flipsol_username', u);
+      document.getElementById('bb-signin-res').innerHTML = '<p style="color:#22eb7d;font-size:13px;font-weight:700;margin:0;">Signed in as ' + u + '! Reloading...</p>';
+      setTimeout(() => location.reload(), 700);
+    };
+
+    document.getElementById('bb-btn-submit-signup').onclick = () => {
+      const u = document.getElementById('bb-signup-user').value.trim() || 'Player';
+      localStorage.setItem('flipsol_username', u);
+      document.getElementById('bb-signup-res').innerHTML = '<p style="color:#22eb7d;font-size:13px;font-weight:700;margin:0;">Account created! Welcome ' + u + '!</p>';
+      setTimeout(() => location.reload(), 700);
+    };
+  };
+
   window.openCashierModal = function() {
     if (document.getElementById('flipsol-brainbetz-modal')) return;
 
@@ -283,17 +399,39 @@
   // HEADER BALANCE PILL & DIRECT CASHIER OPENER
   function renderHeaderBalance() {
     const balance = localStorage.getItem('flipsol_balance') || "0.001";
+    const username = localStorage.getItem('flipsol_username');
 
-    // --- 1. Hide the old top-right connect/sign-in button entirely ---
+    // --- 1. Top-Right: Render Sign In and Sign Up buttons OR Username pill ---
     const headerBtns = document.querySelectorAll('button[data-auth-plate="connect"], button[data-node-id="671:9397"]');
     headerBtns.forEach(btn => {
       btn.style.display = 'none';
     });
 
-    // --- 2. Inject balance pill next to Affiliates nav link (ONLY place it appears) ---
-    // Find the Affiliates link by text content
+    // Check or create top-right Auth container
+    let rightAuth = document.getElementById('flipsol-top-auth');
+    if (!rightAuth) {
+      const topRow = document.querySelector('header div.flex.shrink-0.items-center, div.flex.shrink-0.items-center.gap-\\[10px\\]') || document.querySelector('header') || document.body;
+      if (topRow) {
+        rightAuth = document.createElement('div');
+        rightAuth.id = 'flipsol-top-auth';
+        rightAuth.style.cssText = 'display: flex; align-items: center; gap: 8px; margin-left: auto; flex-shrink: 0;';
+        rightAuth.innerHTML = `
+          <button id="flipsol-btn-signin" class="bb-gray-btn" style="height: 38px; padding: 0 16px; font-size: 13.5px; font-weight: 700; cursor: pointer; border: 1px solid rgba(255,255,255,0.08);">
+            Sign In
+          </button>
+          <button id="flipsol-btn-signup" class="bb-hover-btn" style="height: 38px; padding: 0 16px; font-size: 13.5px; font-weight: 700; cursor: pointer; background: #0083e5; border: 1px solid rgba(255,255,255,0.15);">
+            Sign Up
+          </button>
+        `;
+        topRow.appendChild(rightAuth);
+
+        document.getElementById('flipsol-btn-signin').onclick = (e) => { e.preventDefault(); e.stopPropagation(); window.openAuthModal('signin'); };
+        document.getElementById('flipsol-btn-signup').onclick = (e) => { e.preventDefault(); e.stopPropagation(); window.openAuthModal('signup'); };
+      }
+    }
+
+    // --- 2. Balance pill next to Affiliates link (clean SOL icon + balance, NO Phantom logo) ---
     if (document.getElementById('flipsol-nav-balance')) {
-      // Already injected — just update the balance text
       const el = document.getElementById('flipsol-nav-balance-text');
       if (el) el.textContent = balance;
       return;
